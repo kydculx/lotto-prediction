@@ -1,3 +1,5 @@
+let cachedData = null; // 데이터를 전역 캐시에 저장
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchPredictionData();
     fetchStats();
@@ -12,6 +14,8 @@ async function fetchPredictionData() {
             alert('분석 오류: ' + data.error);
             return;
         }
+
+        cachedData = data; // 데이터 저장
 
         setTimeout(() => {
             renderDashboard(data);
@@ -45,7 +49,19 @@ async function fetchStats() {
     } catch (error) { }
 }
 
-function renderDashboard(data) {
+// 개수 변경 시 호출되는 함수
+window.updateSetCount = function (count) {
+    if (cachedData) {
+        renderDashboard(cachedData, parseInt(count));
+    }
+}
+
+function renderDashboard(data, setCount = null) {
+    // 선택된 개수가 없으면 현재 셀렉트 박스의 값을 사용
+    if (setCount === null) {
+        const selector = document.getElementById('set-count');
+        setCount = selector ? parseInt(selector.value) : 10;
+    }
     const roundHeader = document.getElementById('round-header');
     if (roundHeader) {
         roundHeader.innerText = `제 ${data.next_round}회 예측 분석 결과`;
@@ -63,11 +79,14 @@ function renderDashboard(data) {
     const setsContainer = document.getElementById('prediction-sets');
     if (setsContainer) {
         setsContainer.innerHTML = '';
-        data.predicted_sets.forEach((set, index) => {
+        // 선택된 개수만큼 슬라이싱
+        const displaySets = data.predicted_sets.slice(0, setCount);
+
+        displaySets.forEach((set, index) => {
             const card = document.createElement('div');
             card.className = 'prediction-card';
             // forwards 대신 both를 사용하여 지연 시간 중에도, 종료 후에도 opacity를 유지하도록 설정
-            card.style.animation = `fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.15}s both`;
+            card.style.animation = `fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.05}s both`;
             card.innerHTML = `
                 <div class="confidence-label">
                     <span>앙상블 세트 ${index + 1}</span>

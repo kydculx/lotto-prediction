@@ -15,9 +15,14 @@ elif [ -d ".venv" ]; then
     source .venv/bin/activate
 fi
 
-echo "✅ 서버가 가동되었습니다."
-echo "✅ 브라우저에서 아래 주소로 접속하세요:"
-echo "👉 http://127.0.0.1:5001"
+# 1. 분석 결과 최신화
+echo "🧠 최신 데이터를 기반으로 AI 분석 중..."
+export PYTHONPATH=$PYTHONPATH:.
+python3 src/export_results.py
+
+echo "✅ 준비 완료! 브라우저에서 아래 주소로 접속하세요:"
+echo "👉 http://127.0.0.1:8002"
 echo "================================================"
 
-python app.py
+# 2. 정적 웹 서버 실행
+python3 -m http.server 8002

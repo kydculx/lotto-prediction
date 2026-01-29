@@ -21,8 +21,14 @@ fi
 # echo "📚 종속성 확인 중..."
 # pip install -r requirements.txt
 
-# 서버 실행
-echo "🌐 서버 실행 중: http://127.0.0.1:5001"
-echo "🌐 외부 접속 주소: http://(PC의 IP):5001"
+# 1. 분석 결과 최신화 (JSON 생성)
+echo "🧠 AI 분석 엔진 실행 중..."
+export PYTHONPATH=$PYTHONPATH:.
+python3 src/export_results.py
+
+# 2. 정적 웹 서버 실행 (GitHub Pages 환경 시뮬레이션)
+echo ""
+echo "🌐 서버 실행 중: http://127.0.0.1:8002"
+echo "🌐 이 환경은 GitHub Pages와 동일한 정적 호스팅 방식입니다."
 echo "------------------------------------------------"
-python app.py
+python3 -m http.server 8002

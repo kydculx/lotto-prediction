@@ -54,7 +54,8 @@ def main():
     
     print("\n⏳ 데이터 로딩 및 분석 엔진 초기화 중...")
     loader = LottoDataLoader()
-    loader.load()
+    # 최신 데이터 확인 및 동기화 추가
+    loader.check_for_updates()
     matrix = loader.get_numbers_matrix()
     
     if args.backtest:

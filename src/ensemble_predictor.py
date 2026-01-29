@@ -362,12 +362,12 @@ class EnsemblePredictor:
             return results
         return {'is_valid': True, 'score': 0.5}
     
-    def get_detailed_report(self) -> Dict:
+    def get_detailed_report(self, n_sets: int = 5) -> Dict:
         """상세 분석 리포트"""
         self.calculate_all_scores()
         self.get_all_predictions()
         
-        predicted_sets = self.predict_multiple_sets(5)
+        predicted_sets = self.predict_multiple_sets(n_sets)
         
         return {
             'engine_predictions': self.engine_predictions,
