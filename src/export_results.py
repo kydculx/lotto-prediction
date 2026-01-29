@@ -29,9 +29,9 @@ def export_results():
         return
 
     # 2. 분석 실행 (Ensemble)
-    print("🧠 엔진 분석 중 (99세트 생성)...")
+    print("🧠 엔진 분석 중 (100세트 생성)...")
     predictor = EnsemblePredictor(matrix)
-    report = predictor.get_detailed_report(n_sets=99)
+    report = predictor.get_detailed_report(n_sets=100)
     
     # 3. 데이터 구조화 (Serializing)
     latest_round = int(loader.get_latest_round())
