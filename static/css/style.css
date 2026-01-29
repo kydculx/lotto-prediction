@@ -18,7 +18,8 @@
 }
 
 html {
-    scroll-behavior: smooth;
+    /* scroll-behavior: smooth; */
+    /* 자동 스크롤 오작동 방지를 위해 비활성화 */
 }
 
 body {

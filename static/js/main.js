@@ -1,6 +1,12 @@
 let cachedData = null; // 데이터를 전역 캐시에 저장
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 자동 스크롤 방지: URL에 #dashboard 등이 있어도 무시하고 최상단 고정
+    if (window.location.hash) {
+        history.replaceState(null, null, window.location.pathname);
+    }
+    window.scrollTo(0, 0);
+
     fetchPredictionData();
     fetchStats();
 });
@@ -19,6 +25,8 @@ async function fetchPredictionData() {
 
         setTimeout(() => {
             renderDashboard(data);
+            // 렌더링 후 레이아웃 변화로 인해 스크롤이 이동하지 않도록 다시 한 번 고정
+            window.scrollTo({ top: 0, behavior: 'instant' });
             document.getElementById('loader').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
