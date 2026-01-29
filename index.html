@@ -6,6 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로또 AI | 프리미엄 분석 대시보드</title>
     <link rel="stylesheet" href="static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -187,6 +202,14 @@
                     <div class="summary-item">
                         <div class="card-title">⏰ 장기 미출현 번호</div>
                         <div id="overdue-numbers" class="numbers-row"></div>
+                    </div>
+                </div>
+
+                <!-- Frequency Chart -->
+                <div class="card card-full">
+                    <div class="card-title">📊 번호별 출현 빈도 (1~45번)</div>
+                    <div class="chart-container">
+                        <canvas id="frequencyChart"></canvas>
                     </div>
                 </div>
 

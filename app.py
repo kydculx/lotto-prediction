@@ -49,6 +49,22 @@ def stats():
         'latest_draw': [int(n) for n in loader.get_numbers_matrix()[-1]]
     })
 
+@app.route('/api/frequencies')
+def frequencies():
+    """번호별 출현 빈도 데이터 API"""
+    try:
+        all_numbers = loader.get_all_numbers_flat()
+        unique, counts = np.unique(all_numbers, return_counts=True)
+        
+        # 1-45 전체 번호에 대한 빈도수 보장
+        freq_dict = {int(i): 0 for i in range(1, 46)}
+        for num, count in zip(unique, counts):
+            freq_dict[int(num)] = int(count)
+            
+        return jsonify(freq_dict)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     # Mac에서 5000번 포트는 AirPlay와 충돌할 수 있어 5001번을 권장합니다.
     app.run(host='0.0.0.0', port=8002, debug=True)

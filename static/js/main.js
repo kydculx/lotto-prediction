@@ -54,7 +54,95 @@ async function fetchStats() {
             totalDrawsEl.innerText = `${data.total_draws.toLocaleString()}회`;
         }
         renderBallRow('latest-draw', data.latest_draw, 2);
-    } catch (error) { }
+
+        // 빈도수 데이터 호출 및 차트 초기화 (정적 JSON 파일 사용)
+        const freqResponse = await fetch('./data/frequencies.json');
+        const freqData = await freqResponse.json();
+        initFrequencyChart(freqData);
+    } catch (error) {
+        console.error('Stats error:', error);
+    }
+}
+
+function initFrequencyChart(freqData) {
+    const ctx = document.getElementById('frequencyChart');
+    if (!ctx) return;
+
+    const labels = Object.keys(freqData).sort((a, b) => a - b);
+    const counts = labels.map(label => freqData[label]);
+
+    // 배경색 로직 (볼 색상 계열에 맞춰 그라데이션)
+    const backgroundColors = labels.map(num => {
+        const n = parseInt(num);
+        if (n <= 10) return 'rgba(234, 179, 8, 0.6)'; // yellow
+        if (n <= 20) return 'rgba(59, 130, 246, 0.6)'; // blue
+        if (n <= 30) return 'rgba(239, 68, 68, 0.6)'; // red
+        if (n <= 40) return 'rgba(107, 114, 128, 0.6)'; // gray
+        return 'rgba(34, 197, 94, 0.6)'; // green
+    });
+
+    const borderColors = labels.map(num => {
+        const n = parseInt(num);
+        if (n <= 10) return 'rgba(234, 179, 8, 1)';
+        if (n <= 20) return 'rgba(59, 130, 246, 1)';
+        if (n <= 30) return 'rgba(239, 68, 68, 1)';
+        if (n <= 40) return 'rgba(107, 114, 128, 1)';
+        return 'rgba(34, 197, 94, 1)';
+    });
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '출현 빈도',
+                data: counts,
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        title: (items) => `${items[0].label}번`,
+                        label: (item) => `총 ${item.raw}회 출현`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: { size: 10 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: { size: 10 },
+                        autoSkip: false
+                    }
+                }
+            }
+        }
+    });
 }
 
 // 개수 변경 시 호출되는 함수

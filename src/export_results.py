@@ -61,16 +61,29 @@ def export_results():
     
     pred_path = data_dir / "prediction.json"
     stats_path = data_dir / "stats.json"
+    freq_path = data_dir / "frequencies.json"
     
     with open(pred_path, 'w', encoding='utf-8') as f:
         json.dump(prediction_data, f, ensure_ascii=False, indent=2)
     
     with open(stats_path, 'w', encoding='utf-8') as f:
         json.dump(stats_data, f, ensure_ascii=False, indent=2)
+
+    # 번호별 출현 빈도 계산 및 저장
+    import numpy as np
+    all_numbers = loader.get_all_numbers_flat()
+    unique, counts = np.unique(all_numbers, return_counts=True)
+    freq_dict = {int(i): 0 for i in range(1, 46)}
+    for num, count in zip(unique, counts):
+        freq_dict[int(num)] = int(count)
+        
+    with open(freq_path, 'w', encoding='utf-8') as f:
+        json.dump(freq_dict, f, ensure_ascii=False, indent=2)
         
     print(f"✅ 결과 저장 완료:")
     print(f"   - {pred_path}")
     print(f"   - {stats_path}")
+    print(f"   - {freq_path}")
 
 if __name__ == "__main__":
     export_results()
