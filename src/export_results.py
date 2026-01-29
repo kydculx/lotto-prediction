@@ -1,39 +1,57 @@
 import json
-import os
+import logging
 import sys
 from pathlib import Path
+import numpy as np
 
-# 프로젝트 루트를 경로에 추가
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+# Add project root to path
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.append(str(PROJECT_ROOT))
 
 try:
     from src.data_loader import LottoDataLoader
     from src.ensemble_predictor import EnsemblePredictor
 except ImportError as e:
-    print(f"❌ 모듈 임포트 실패: {e}")
+    logger.error(f"모듈 임포트 실패: {e}")
     sys.exit(1)
 
-def export_results():
-    """분석 엔진을 실행하여 결과를 JSON 파일로 저장합니다."""
-    print("🚀 분석 결과 내보내기 시작...")
+def calculate_frequencies(loader):
+    """번호별 출현 빈도를 계산하여 딕셔너리로 반환합니다."""
+    all_numbers = loader.get_all_numbers_flat()
+    unique, counts = np.unique(all_numbers, return_counts=True)
     
-    # 1. 데이터 로드
+    freq_dict = {int(i): 0 for i in range(1, 46)}
+    for num, count in zip(unique, counts):
+        freq_dict[int(num)] = int(count)
+    return freq_dict
+
+def export_results():
+    """분석 엔진을 실행하고 결과를 JSON 파일로 저장합니다."""
+    logger.info("🚀 분석 결과 내보내기 시작...")
+    
+    # 1. 데이터 로드 및 업데이트 체크
     loader = LottoDataLoader()
-    # 데이터가 없으면 크롤링 수행 (내부 로직)
     loader.check_for_updates()
     
     matrix = loader.get_numbers_matrix()
     if matrix is None or len(matrix) == 0:
-        print("❌ 분석할 데이터가 없습니다.")
+        logger.error("분석할 데이터가 없습니다.")
         return
 
-    # 2. 분석 실행 (Ensemble)
-    print("🧠 엔진 분석 중 (100세트 생성)...")
+    # 2. AI 엔진 분석 실행
+    logger.info("🧠 AI 엔진 분석 중 (100세트 생성)...")
     predictor = EnsemblePredictor(matrix)
     report = predictor.get_detailed_report(n_sets=100)
     
-    # 3. 데이터 구조화 (Serializing)
+    # 3. 데이터 구조화
     latest_round = int(loader.get_latest_round())
     prediction_data = {
         'latest_round': latest_round,
@@ -48,42 +66,33 @@ def export_results():
         'export_time': Path(loader.file_path).stat().st_mtime if loader.file_path.exists() else 0
     }
     
-    # 통계 데이터 추가 내보내기
     stats_data = {
         'total_draws': len(loader.df),
         'latest_draw': [int(n) for n in matrix[-1]],
-        'rounds': loader.df['round'].tolist()[-50:], # 최근 50회차 리스트
+        'rounds': loader.df['round'].tolist()[-50:],
     }
 
-    # 4. JSON 파일 저장
-    data_dir = project_root / "data"
+    # 4. 파일 저장 설정
+    data_dir = PROJECT_ROOT / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     
-    pred_path = data_dir / "prediction.json"
-    stats_path = data_dir / "stats.json"
-    freq_path = data_dir / "frequencies.json"
-    
-    with open(pred_path, 'w', encoding='utf-8') as f:
-        json.dump(prediction_data, f, ensure_ascii=False, indent=2)
-    
-    with open(stats_path, 'w', encoding='utf-8') as f:
-        json.dump(stats_data, f, ensure_ascii=False, indent=2)
+    files_to_save = {
+        "prediction.json": prediction_data,
+        "stats.json": stats_data,
+        "frequencies.json": calculate_frequencies(loader)
+    }
 
-    # 번호별 출현 빈도 계산 및 저장
-    import numpy as np
-    all_numbers = loader.get_all_numbers_flat()
-    unique, counts = np.unique(all_numbers, return_counts=True)
-    freq_dict = {int(i): 0 for i in range(1, 46)}
-    for num, count in zip(unique, counts):
-        freq_dict[int(num)] = int(count)
-        
-    with open(freq_path, 'w', encoding='utf-8') as f:
-        json.dump(freq_dict, f, ensure_ascii=False, indent=2)
-        
-    print(f"✅ 결과 저장 완료:")
-    print(f"   - {pred_path}")
-    print(f"   - {stats_path}")
-    print(f"   - {freq_path}")
+    for filename, content in files_to_save.items():
+        file_path = data_dir / filename
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(content, f, ensure_ascii=False, indent=2)
+        logger.info(f"💾 저장 완료: {file_path}")
+
+    logger.info("✅ 모든 분석 결과 내보내기가 완료되었습니다.")
 
 if __name__ == "__main__":
-    export_results()
+    try:
+        export_results()
+    except Exception as e:
+        logger.exception(f"내보내기 중 예기치 않은 오류 발생: {e}")
+        sys.exit(1)
