@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.xlsx
+.gemini/
+.agent/
+optimization_result.json
+data/lotto_results.json

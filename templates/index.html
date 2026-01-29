@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로또 AI | 프리미엄 분석 대시보드</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+
+    <div id="loader">
+        <div class="spinner-outer">
+            <div class="spinner-inner"></div>
+        </div>
+        <div class="loading-text">미래의 숫자를 계산 중...</div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">AI ENSEMBLE SYSTEM V2.0</div>
+            <h1><span class="gradient-text">Lotto AI Prediction</span></h1>
+            <p>10가지 첨단 알고리즘과 앙상블 딥러닝 기술로<br>방대한 당첨 데이터를 분석하여 최적의 조합을 도출합니다.</p>
+            <div class="hero-btns">
+                <a href="#dashboard" class="btn-primary">실시간 분석 결과 보기</a>
+                <a href="#features" class="btn-secondary">분석 엔진 기술 소개</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="section-container">
+            <div class="section-tag">TECHNOLOGY</div>
+            <h2 class="section-title">10대 분석 엔진의 핵심 기술</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.04-2.44V4.5A2.5 2.5 0 0 1 7.5 2z" />
+                            <path
+                                d="M14.5 2A2.5 2.5 0 0 1 17 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.04-2.44V4.5A2.5 2.5 0 0 1 12.5 2z" />
+                        </svg>
+                    </div>
+                    <h3>LSTM Deep Learning</h3>
+                    <p>장기 기억 시계열 데이터를 분석하여 번호 간의 복잡한 순차적 의존성과 숨겨진 패턴을 파악합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18" />
+                            <path d="M18 9l-5 5-2-2-4 4" />
+                        </svg>
+                    </div>
+                    <h3>TimeSeries Analysis</h3>
+                    <p>과거 당첨 번호의 흐름을 시간 축으로 분석하여 다음 회차의 수치적 추세를 정교하게 예측합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 20V10" />
+                            <path d="M12 20V4" />
+                            <path d="M6 20v-6" />
+                        </svg>
+                    </div>
+                    <h3>Statistical Analysis</h3>
+                    <p>출현 빈도, 누적 확률, 표준 편차 분석을 통해 통계적으로 당첨 확률이 높은 번호군을 선별합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
+                    </div>
+                    <h3>Graph Theory</h3>
+                    <p>번호 간의 상관관계를 네트워크 구조로 모델링하여 강력한 연결 고리를 가진 상호 연관 숫자를 추출합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </div>
+                    <h3>Pattern Detection</h3>
+                    <p>수천 회차의 결과에서 반복되는 숫자 배열과 특수 패턴을 감지하여 전략적 조합을 구성합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                        </svg>
+                    </div>
+                    <h3>Advanced Pattern</h3>
+                    <p>복합적인 변수를 고려한 고차원 패턴 인식을 통해 일반적인 분석으로 찾기 힘든 조합을 찾아냅니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                    </div>
+                    <h3>Sequence Correlation</h3>
+                    <p>연속된 숫자와 특정 간격으로 나타나는 번호 간의 상관계수를 계산하여 최적의 수열을 도출합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="9" rx="2" />
+                            <path d="M5 7v4" />
+                            <path d="M9 7v4" />
+                            <path d="M13 7v4" />
+                            <path d="M17 7v4" />
+                        </svg>
+                    </div>
+                    <h3>Gap Analysis</h3>
+                    <p>번호 출현 사이의 간격(Gap) 데이타를 분석하여 특정 시점에 나올 확률이 극대화된 번호를 예측합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <line x1="3" y1="9" x2="21" y2="9" />
+                            <line x1="3" y1="15" x2="21" y2="15" />
+                            <line x1="9" y1="3" x2="9" y2="21" />
+                            <line x1="15" y1="3" x2="15" y2="21" />
+                        </svg>
+                    </div>
+                    <h3>Numerology Engine</h3>
+                    <p>수비학적 관점에서 숫자의 속성과 조화를 분석하여 앙상블 분석에 다각적인 관점을 제공합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3v3" />
+                            <path d="M18.5 4.5l-2.1 2.1" />
+                            <path d="M4.5 4.5l2.1 2.1" />
+                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                            <path d="M12 12l3 2" />
+                        </svg>
+                    </div>
+                    <h3>Ensemble Optimization</h3>
+                    <p>모든 개별 엔진의 예측치를 가중치 기반으로 통합하여 단일 알고리즘의 한계를 극복합니다.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="dashboard-section">
+        <div class="container">
+            <header>
+                <div class="section-tag">REAL-TIME ANALYSIS</div>
+                <h2 class="section-title" id="round-header">분석 결과 로딩 중...</h2>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Summary stats -->
+                <div class="card card-full summary-card">
+                    <div class="summary-item">
+                        <div class="card-title">🔥 핫 넘버 (많이 나온 번호)</div>
+                        <div id="hot-numbers" class="numbers-row"></div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="card-title">❄️ 콜드 넘버 (적게 나온 번호)</div>
+                        <div id="cold-numbers" class="numbers-row"></div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="card-title">⏰ 장기 미출현 번호</div>
+                        <div id="overdue-numbers" class="numbers-row"></div>
+                    </div>
+                </div>
+
+                <!-- Main Predictions -->
+                <div class="card card-main">
+                    <div class="card-title">🎯 AT 앙상블 추천 조합</div>
+                    <div id="prediction-sets" class="prediction-sets"></div>
+                </div>
+
+                <!-- Analysis Status / Stats -->
+                <div class="card card-side">
+                    <div class="card-title">📂 시스템 인사이트</div>
+                    <div id="system-insights" class="insights-container">
+                        <div class="insight-item">
+                            <div class="insight-label">누적 분석 회차</div>
+                            <div id="total-draws" class="insight-value">-</div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-label">최근 당첨 번호</div>
+                            <div id="latest-draw" class="numbers-row"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engines -->
+                <div class="card card-full">
+                    <div class="card-title">⚙️ 예측 엔진별 상세 분석</div>
+                    <div id="engine-grid" class="engine-grid"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 Lotto AI Systems. All rights reserved.</p>
+            <p class="disclaimer">본 시스템의 예측 결과는 통계 및 데이터 분석에 기반하며, 당첨을 보장하지 않습니다.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>

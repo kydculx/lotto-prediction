@@ -1,0 +1,50 @@
+name: Update Lotto Prediction & Deploy
+
+on:
+  schedule:
+    # 매주 토요일 21:00 KST (12:00 UTC) 이후 실행 (로또 추첨 완료 후)
+    - cron: '30 12 * * 6'
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/python-latest@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Crawler & Export Results
+        run: |
+          export PYTHONPATH=$PYTHONPATH:.
+          python3 src/export_results.py
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          publish_branch: gh-pages
+          force_orphan: true
+          # 배포에서 제외할 파일들 (선택 사항)
+          exclude_assets: |
+            .github/
+            venv/
+            src/
+            data/lotto_results.json
+            requirements.txt
+            *.xlsx
+            .gemini/
+            .agent/
