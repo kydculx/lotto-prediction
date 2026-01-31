@@ -15,30 +15,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initApp() {
     try {
-        await Promise.all([fetchPredictionData(), fetchStats()]);
+        const [predictionData] = await Promise.all([fetchPredictionData(), fetchStats()]);
+        if (predictionData) {
+            // Simulated AI processing time for premium feel
+            setTimeout(() => {
+                renderDashboard(predictionData);
+                finalizeAppLoad();
+            }, 1500);
+        } else {
+            finalizeAppLoad(); // Hide loader even if prediction data fails
+        }
     } catch (error) {
         console.error('App initialization failed:', error);
+        finalizeAppLoad(); // Ensure loader is hidden on app init failure
     }
 }
 
-async function fetchPredictionData() {
+async function fetchPredictionData(targetRound = null) {
     try {
-        const response = await fetch('./data/prediction.json');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const path = targetRound
+            ? `./data/history/prediction_${targetRound}.json`
+            : './data/prediction.json';
 
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-
-        cachedData = data;
-
-        // Simulated AI processing time for premium feel
-        setTimeout(() => {
-            renderDashboard(data);
-            finalizeAppLoad();
-        }, 1500);
-
+        const response = await fetch(path);
+        if (!response.ok) {
+            throw new Error(targetRound
+                ? `${targetRound}회차 데이터가 없습니다.`
+                : '최신 분석 데이터를 불러올 수 없습니다.');
+        }
+        return await response.json();
     } catch (error) {
-        handleFetchError('분석 데이터를 불러오는 중 오류가 발생했습니다.', error);
+        handleFetchError(error, '분석 데이터');
+        return null;
     }
 }
 
@@ -74,9 +82,9 @@ function finalizeAppLoad() {
     }
 }
 
-function handleFetchError(message, error) {
+function handleFetchError(error, contextMessage) {
     console.error(error);
-    alert(message);
+    alert(`${contextMessage}를 불러오는 중 오류가 발생했습니다: ${error.message}`);
     const loader = getEl('loader');
     if (loader) {
         loader.style.opacity = '0';
@@ -149,8 +157,8 @@ function getChartColor(n, alpha) {
 
 // Global update handler
 window.updateSetCount = function (count) {
-    if (cachedData) {
-        renderDashboard(cachedData, parseInt(count));
+    if (state.allPredictions.length > 0) {
+        renderPredictionSets(state.allPredictions, parseInt(count));
     }
 }
 
@@ -158,6 +166,9 @@ window.updateSetCount = function (count) {
  * Main dashboard rendering entry point
  */
 function renderDashboard(data, setCount = null) {
+    state.allPredictions = data.predicted_sets;
+    state.currentRound = data.next_round;
+
     if (setCount === null) {
         const selector = getEl('set-count');
         setCount = selector ? parseInt(selector.value) : 10;
@@ -165,13 +176,74 @@ function renderDashboard(data, setCount = null) {
 
     updateRoundHeader(data.next_round);
     renderSummaryStats(data.hot_cold);
-    renderPredictionSets(data.predicted_sets, setCount);
+    renderPredictionSets(state.allPredictions, setCount);
     renderEngineInsights(data.engine_predictions);
 }
 
+// --- Global Actions ---
+
+window.updateSetCount = (count) => {
+    renderPredictionSets(state.allPredictions, parseInt(count));
+};
+
+window.searchRound = async () => {
+    const input = getEl('search-round');
+    const roundNum = parseInt(input.value);
+
+    if (!roundNum || roundNum < 1) {
+        alert('올바른 회차 번호를 입력해주세요.');
+        return;
+    }
+
+    getEl('loader').style.opacity = '1';
+    getEl('loader').style.visibility = 'visible';
+
+    state.isHistorical = true;
+    const data = await fetchPredictionData(roundNum);
+
+    if (data) {
+        renderDashboard(data);
+    } else {
+        state.isHistorical = false; // 실패 시 상태 복구
+    }
+
+    setTimeout(() => {
+        getEl('loader').style.opacity = '0';
+        setTimeout(() => getEl('loader').style.visibility = 'hidden', 800);
+    }, 500);
+};
+
+window.resetToLatest = async () => {
+    getEl('loader').style.opacity = '1';
+    getEl('loader').style.visibility = 'visible';
+
+    state.isHistorical = false;
+    getEl('search-round').value = '';
+
+    const data = await fetchPredictionData();
+    if (data) renderDashboard(data);
+
+    setTimeout(() => {
+        getEl('loader').style.opacity = '0';
+        setTimeout(() => getEl('loader').style.visibility = 'hidden', 800);
+    }, 500);
+};
+
 function updateRoundHeader(nextRound) {
-    const el = getEl('round-header');
-    if (el) el.innerText = `제 ${nextRound}회 예측 분석 결과`;
+    const header = getEl('round-header');
+    const tag = document.querySelector('.section-tag');
+
+    if (state.isHistorical) {
+        header.textContent = `${nextRound - 1}회차 과거 분석 결과 (복원)`;
+        if (tag) tag.textContent = 'HISTORICAL ANALYSIS';
+        const resetButton = getEl('reset-button');
+        if (resetButton) resetButton.style.display = 'block';
+    } else {
+        header.textContent = `${nextRound}회차 예상 분석 결과`;
+        if (tag) tag.textContent = 'REAL-TIME ANALYSIS';
+        const resetButton = getEl('reset-button');
+        if (resetButton) resetButton.style.display = 'none';
+    }
 }
 
 function renderSummaryStats(hotCold) {

@@ -186,6 +186,22 @@
             <header>
                 <div class="section-tag">REAL-TIME ANALYSIS</div>
                 <h2 class="section-title" id="round-header">분석 결과 로딩 중...</h2>
+                <div class="search-container"
+                    style="display: flex; justify-content: center; gap: 0.5rem; margin-top: -2rem; margin-bottom: 3rem; flex-wrap: wrap;">
+                    <div
+                        style="position: relative; display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); border-radius: 100px; padding: 0.25rem 0.5rem 0.25rem 1.25rem;">
+                        <span
+                            style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); margin-right: 0.5rem;">회차
+                            조회:</span>
+                        <input type="number" id="search-round" placeholder="예: 100"
+                            style="background: transparent; border: none; color: #fff; width: 60px; font-weight: 800; outline: none; padding: 0.5rem 0;">
+                        <button onclick="window.searchRound()"
+                            style="background: var(--accent-color); border: none; color: #fff; padding: 0.5rem 1.25rem; border-radius: 100px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-left: 0.5rem;">검색</button>
+                    </div>
+                    <button id="reset-button" onclick="window.resetToLatest()"
+                        style="display: none; background: rgba(255,255,255,0.1); border: 1px solid var(--card-border); color: #fff; padding: 0.75rem 1.5rem; border-radius: 100px; font-weight: 700; cursor: pointer; transition: all 0.2s;">최신
+                        회차로 복귀</button>
+                </div>
             </header>
 
             <div class="dashboard-grid">
