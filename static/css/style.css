@@ -292,11 +292,13 @@ h1 {
 }
 
 .card-main {
-    grid-column: span 8;
+    grid-column: span 12;
+    /* Full width to stack vertically */
 }
 
 .card-side {
-    grid-column: span 4;
+    grid-column: span 12;
+    /* Full width to stack vertically */
 }
 
 .card-header-flex {
@@ -538,8 +540,19 @@ h1 {
 /* Insights */
 .insights-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    /* Horizontal on desktop */
+    justify-content: space-around;
+    align-items: center;
     gap: 2rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .insights-container {
+        flex-direction: column;
+        /* Vertical on mobile */
+    }
 }
 
 .insight-item {
