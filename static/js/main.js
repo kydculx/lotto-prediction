@@ -251,7 +251,7 @@ function updateRoundHeader(nextRound) {
     const tag = document.querySelector('.section-tag');
 
     if (state.isHistorical) {
-        header.textContent = `${nextRound - 1}회차 과거 분석 결과`;
+        header.textContent = `${nextRound}회차 과거 분석 결과`;
         if (tag) tag.textContent = 'HISTORICAL ANALYSIS';
         const resetButton = getEl('reset-button');
         if (resetButton) resetButton.style.display = 'block';

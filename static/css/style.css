@@ -565,10 +565,19 @@ h1 {
 }
 
 /* Engine Grid */
+/* Engine Grid */
 .engine-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    /* User requested 2 sets per row on desktop */
     gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .engine-grid {
+        grid-template-columns: 1fr;
+        /* Stack on mobile */
+    }
 }
 
 /* Mobile Responsiveness */

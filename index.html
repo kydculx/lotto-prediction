@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로또 AI | 프리미엄 분석 대시보드</title>
-    <link rel="stylesheet" href="static/css/style.css?v=20260201v5">
+    <link rel="stylesheet" href="static/css/style.css?v=20260201v6">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .chart-container {
@@ -227,7 +227,22 @@
                     </div>
                 </div>
 
-                <!-- Main Predictions -->
+                <!-- Analysis Status / Stats (System Insights) - MOVED UP -->
+                <div class="card card-side">
+                    <div class="card-title">📂 시스템 인사이트</div>
+                    <div id="system-insights" class="insights-container">
+                        <div class="insight-item">
+                            <div class="insight-label">누적 분석 회차</div>
+                            <div id="total-draws" class="insight-value">-</div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-label">최근 당첨 번호</div>
+                            <div id="latest-draw" class="numbers-row"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Predictions (Ensemble) - MOVED DOWN -->
                 <div class="card card-main">
                     <div class="card-header-flex">
                         <div class="card-title">🎯 앙상블 추천 조합</div>
@@ -243,21 +258,6 @@
                         </div>
                     </div>
                     <div id="prediction-sets" class="prediction-sets"></div>
-                </div>
-
-                <!-- Analysis Status / Stats -->
-                <div class="card card-side">
-                    <div class="card-title">📂 시스템 인사이트</div>
-                    <div id="system-insights" class="insights-container">
-                        <div class="insight-item">
-                            <div class="insight-label">누적 분석 회차</div>
-                            <div id="total-draws" class="insight-value">-</div>
-                        </div>
-                        <div class="insight-item">
-                            <div class="insight-label">최근 당첨 번호</div>
-                            <div id="latest-draw" class="numbers-row"></div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Engines -->
@@ -276,7 +276,7 @@
         </div>
     </footer>
 
-    <script src="static/js/main.js?v=20260201v2" defer></script>
+    <script src="static/js/main.js?v=20260201v3" defer></script>
 </body>
 
 </html>
