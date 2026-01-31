@@ -1,4 +1,9 @@
 let cachedData = null;
+const state = {
+    allPredictions: [],
+    currentRound: null,
+    isHistorical: false
+};
 
 // DOM Utility: Get element with error check
 const getEl = (id) => document.getElementById(id);

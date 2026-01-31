@@ -37,6 +37,16 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:.
           python3 src/export_results.py
 
+      - name: Commit & Push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/lotto.db data/history/*.json data/prediction.json data/stats.json data/frequencies.json
+          git commit -m "chore: automated lotto data update [skip ci]" || echo "No changes to commit"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -44,12 +54,10 @@ jobs:
           publish_dir: .
           publish_branch: gh-pages
           force_orphan: true
-          # 배포에서 제외할 파일들 (선택 사항)
           exclude_assets: |
             .github/
             venv/
             src/
-            data/lotto_results.json
             requirements.txt
             *.xlsx
             .gemini/
