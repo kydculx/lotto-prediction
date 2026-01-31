@@ -499,8 +499,9 @@ h1 {
     }
 
     .set-confidence {
-        font-size: 0.8rem;
-        min-width: 2.5rem;
+        font-size: 0.5rem;
+        /* Halved from 0.8rem */
+        min-width: 2rem;
         /* Compact confidence */
     }
 }
@@ -523,10 +524,10 @@ h1 {
 }
 
 .set-confidence {
-    font-size: 1.1rem;
+    font-size: 0.6rem;
+    /* Halved from 1.1rem */
     font-weight: 800;
     color: #c084fc;
-    min-width: 4rem;
     text-align: right;
 }
 
