@@ -459,6 +459,43 @@ h1 {
     gap: 1rem;
 }
 
+/* Mobile Optimization for Single Line */
+@media (max-width: 640px) {
+    .prediction-card {
+        padding: 0.5rem 0.25rem;
+        /* Minimal padding */
+        gap: 2px;
+        /* Tight gap */
+    }
+
+    .prediction-card .number-ball {
+        width: clamp(1.8rem, 8vw, 2.2rem);
+        /* Smaller ball */
+        height: clamp(1.8rem, 8vw, 2.2rem);
+        font-size: 1.1rem;
+        /* Maximize font size within small ball */
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .numbers-row {
+        gap: 2px !important;
+        /* Tightest ball spacing */
+    }
+
+    .set-index {
+        font-size: 0.9rem;
+        width: 1.5rem;
+        /* Narrow index */
+    }
+
+    .set-confidence {
+        font-size: 0.8rem;
+        min-width: 2.5rem;
+        /* Compact confidence */
+    }
+}
+
 .prediction-card .number-ball {
     width: clamp(2.4rem, 7vw, 3.2rem);
     /* Significantly increased */
