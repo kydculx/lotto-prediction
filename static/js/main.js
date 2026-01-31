@@ -346,8 +346,7 @@ function renderBallRow(containerId, numbers, size) {
     if (!container) return;
 
     container.innerHTML = numbers.map(num => `
-        <div class="number-ball ${getNumberColorClass(num)}" 
-             style="width: ${size}rem; height: ${size}rem; font-size: ${size * 0.4}rem">
+        <div class="number-ball ${getNumberColorClass(num)}">
             ${num}
         </div>
     `).join('');
