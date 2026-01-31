@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""
+🎱 로또 당첨번호 예측 시스템 (Refactored)
+Multi-Engine Ensemble Predictor
+"""
+
+import sys
+import argparse
+from pathlib import Path
+
+# 프로젝트 루트를 path에 추가
+sys.path.insert(0, str(Path(__file__).parent))
+
+from src.data_loader import LottoDataLoader
+from src.ensemble_predictor import EnsemblePredictor
+from src.utils.formatter import LottoFormatter
+
+
+def run_backtest(loader, last_n: int = 100):
+    """과거 데이터로 백테스트"""
+    print(f"\n🔬 백테스팅 (최근 {last_n}회차)")
+    print("-" * 60)
+    
+    df = loader.df
+    total_draws = len(df)
+    hit_counts = {i: 0 for i in range(7)}
+    total_hits = 0
+    
+    for i in range(last_n):
+        test_idx = total_draws - last_n + i
+        train_matrix = loader.get_numbers_matrix()[:test_idx]
+        
+        if len(train_matrix) < 100: continue
+        
+        predictor = EnsemblePredictor(train_matrix, use_ml=False, use_validator=False)
+        predicted, _ = predictor.predict_single_set()
+        actual = set(loader.get_draw_by_round(int(df.iloc[test_idx]['round'])))
+        
+        hits = len(set(predicted) & actual)
+        hit_counts[hits] += 1
+        total_hits += hits
+    
+    LottoFormatter.print_backtest_report(hit_counts, total_hits / last_n if last_n > 0 else 0)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='로또 당첨번호 예측 시스템')
+    parser.add_argument('--sets', type=int, default=5, help='예측 세트 수')
+    parser.add_argument('--backtest', action='store_true', help='백테스팅 실행')
+    parser.add_argument('--last', type=int, default=100, help='백테스팅 회차 수')
+    parser.add_argument('--simple', action='store_true', help='간단 출력 모드')
+    
+    args = parser.parse_args()
+    
+    print("\n⏳ 데이터 로딩 및 분석 엔진 초기화 중...")
+    loader = LottoDataLoader()
+    # 최신 데이터 확인 및 동기화 추가
+    loader.check_for_updates()
+    matrix = loader.get_numbers_matrix()
+    
+    if args.backtest:
+        run_backtest(loader, args.last)
+        return
+    
+    predictor = EnsemblePredictor(matrix)
+    predicted_sets = predictor.predict_multiple_sets(args.sets)
+    
+    LottoFormatter.print_header(loader.get_latest_round() + 1)
+    
+    if not args.simple:
+        LottoFormatter.print_hot_cold(predictor.get_hot_cold_analysis())
+        LottoFormatter.print_engine_predictions(predictor.engine_predictions)
+    
+    LottoFormatter.print_final_predictions(predicted_sets)
+    LottoFormatter.print_footer()
+
+
+if __name__ == "__main__":
+    main()
