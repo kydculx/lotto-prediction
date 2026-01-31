@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 class LottoCrawler:
-    """로또 당첨번호 공식 웹 크롤러 (동행복권)"""
+    """로또 당첨번호 공식 웹 크롤러 (동행복권) - 벌크 최적화 버전"""
     
     # 공식 사이트 AJAX API URL
     API_URL = "https://www.dhlottery.co.kr/lt645/selectPstLt645Info.do"
@@ -41,87 +41,70 @@ class LottoCrawler:
                 logger.error(f"⚠️ 데이터 로드 중 오류 발생: {e}")
                 self.results = []
 
-    def get_latest_round_num(self) -> int:
-        """공식 API에서 가장 최신 회차 번호를 가져옵니다."""
-        try:
-            # srchLtEpsd=all 을 사용하여 최근 결과들을 가져옴
-            params = {'srchLtEpsd': 'all'}
-            response = requests.get(self.API_URL, params=params, headers=self.headers, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('data') and data['data'].get('list'):
-                    # 리스트에서 가장 큰 ltEpsd 값을 찾음
-                    rounds = [int(item['ltEpsd']) for item in data['data']['list']]
-                    return max(rounds) if rounds else 0
-        except Exception as e:
-            logger.error(f"❌ 최신 회차 번호 가져오기 실패: {e}")
-        return 0
-
-    def fetch_round(self, round_num: int) -> Optional[Dict]:
-        """특정 회차의 데이터를 공식 API에서 가져옵니다."""
-        try:
-            params = {'srchLtEpsd': str(round_num)}
-            response = requests.get(self.API_URL, params=params, headers=self.headers, timeout=10)
-            if response.status_code == 200:
-                res_data = response.json()
-                if res_data.get('data') and res_data['data'].get('list'):
-                    item = res_data['data']['list'][0]
-                    # 날짜 형식 변환: 20260124 -> 2026-01-24
-                    raw_date = item['ltRflYmd']
-                    formatted_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
-                    
-                    return {
-                        "round": int(item['ltEpsd']),
-                        "date": formatted_date,
-                        "numbers": sorted([
-                            int(item['tm1WnNo']),
-                            int(item['tm2WnNo']),
-                            int(item['tm3WnNo']),
-                            int(item['tm4WnNo']),
-                            int(item['tm5WnNo']),
-                            int(item['tm6WnNo'])
-                        ]),
-                        "bonus": int(item['bnsWnNo'])
-                    }
-        except Exception as e:
-            logger.error(f"❌ {round_num}회차 데이터 가져오기 실패: {e}")
-        return None
+    def _parse_item(self, item: Dict) -> Dict:
+        """API 응답 아이템을 공통 형식으로 파싱합니다."""
+        raw_date = item['ltRflYmd']
+        formatted_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
+        return {
+            "round": int(item['ltEpsd']),
+            "date": formatted_date,
+            "numbers": sorted([
+                int(item['tm1WnNo']),
+                int(item['tm2WnNo']),
+                int(item['tm3WnNo']),
+                int(item['tm4WnNo']),
+                int(item['tm5WnNo']),
+                int(item['tm6WnNo'])
+            ]),
+            "bonus": int(item['bnsWnNo'])
+        }
 
     def fetch_all(self, force=False):
-        """기존 데이터에 없는 최신 회차들을 수집합니다."""
+        """모든 회차 또는 누락된 회차를 벌크 API를 통해 한 번에 수집합니다."""
         self.load_existing_data()
-        latest_on_web = self.get_latest_round_num()
         
-        if latest_on_web == 0:
-            logger.error("웹에서 최신 회차 정보를 읽어올 수 없습니다.")
-            return
+        logger.info("📡 공식 사이트에서 전체 데이터를 조회 중입니다 (Bulk Fetch)...")
+        try:
+            params = {'srchLtEpsd': 'all'}
+            response = requests.get(self.API_URL, params=params, headers=self.headers, timeout=20)
+            if response.status_code != 200:
+                logger.error(f"❌ API 연결 실패 (Status: {response.status_code})")
+                return
 
-        latest_stored = self.results[-1]['round'] if self.results else 0
-        
-        if not force and latest_stored >= latest_on_web:
-            logger.info(f"✨ 이미 최신 상태입니다. (로컬: {latest_stored}, 웹: {latest_on_web})")
-            return
-        
-        logger.info(f"🚀 {latest_stored + 1}회부터 {latest_on_web}회까지 수집을 시작합니다.")
-        
-        new_results = []
-        for r_num in range(latest_stored + 1, latest_on_web + 1):
-            logger.info(f"📥 {r_num}회차 응답 대기 중...")
-            data = self.fetch_round(r_num)
-            if data:
-                new_results.append(data)
-                # API 부하 방지를 위해 아주 약간의 지연
-                time.sleep(0.2)
+            all_data = response.json()
+            if not all_data.get('data') or not all_data['data'].get('list'):
+                logger.error("❌ 유효한 데이터를 찾을 수 없습니다.")
+                return
+
+            raw_list = all_data['data']['list']
+            # 전체 데이터를 파싱
+            web_results = [self._parse_item(item) for item in raw_list]
+            web_results.sort(key=lambda x: x['round'])
+            
+            latest_on_web = web_results[-1]['round'] if web_results else 0
+            latest_stored = self.results[-1]['round'] if self.results else 0
+
+            if not force and latest_stored >= latest_on_web:
+                logger.info(f"✨ 이미 최신 상태입니다. (로컬: {latest_stored}, 웹: {latest_on_web})")
+                return
+
+            # 기존 데이터와 병합 (중복 제거 및 최신화)
+            stored_rounds = {r['round'] for r in self.results}
+            new_count = 0
+            for item in web_results:
+                if item['round'] not in stored_rounds:
+                    self.results.append(item)
+                    new_count += 1
+            
+            if new_count > 0:
+                self.results.sort(key=lambda x: x['round'])
+                self.save_data()
+                logger.info(f"🎉 총 {new_count}개 회차의 누락된 데이터가 벌크로 업데이트되었습니다.")
             else:
-                logger.warning(f"⚠️ {r_num}회차 수집 실패")
-        
-        if new_results:
-            self.results.extend(new_results)
-            self.results.sort(key=lambda x: x['round'])
-            self.save_data()
-            logger.info(f"🎉 총 {len(new_results)}개 회차 업데이트 완료!")
-        else:
-            logger.info("💤 업데이트할 데이터가 없습니다.")
+                logger.info("💤 추가할 데이터가 없습니다.")
+
+        except Exception as e:
+            logger.error(f"❌ 전체 데이터 수집 중 오류 발생: {e}")
 
     def save_data(self):
         """수집된 데이터를 JSON 파일로 저장합니다."""
