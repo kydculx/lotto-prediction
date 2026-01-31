@@ -469,11 +469,11 @@ h1 {
     }
 
     .prediction-card .number-ball {
-        width: clamp(1.5rem, 8vw, 1.8rem);
-        /* Reduced from 1.8rem minimum */
-        height: clamp(1.5rem, 8vw, 1.8rem);
-        font-size: 1rem;
-        /* Slightly reduced font to match smaller ball */
+        width: 2.0rem;
+        /* Standardizing size */
+        height: 2.0rem;
+        font-size: 0.95rem;
+        /* Balanced font size */
         font-weight: 800;
         margin: 0;
     }
