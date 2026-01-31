@@ -65,6 +65,19 @@ async function fetchStats() {
         if (totalDrawsEl) {
             totalDrawsEl.innerText = `${data.total_draws.toLocaleString()}회`;
         }
+
+        // Populate Round Selector
+        const selector = getEl('round-selector');
+        if (selector) {
+            selector.innerHTML = '<option value="" disabled selected>회차 선택</option>';
+            for (let i = data.total_draws; i >= 1; i--) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i}회`;
+                selector.appendChild(option);
+            }
+        }
+
         renderBallRow('latest-draw', data.latest_draw, 2);
 
         // Fetch frequency data and init chart
@@ -192,13 +205,10 @@ window.updateSetCount = (count) => {
 };
 
 window.searchRound = async () => {
-    const input = getEl('search-round');
-    const roundNum = parseInt(input.value);
+    const selector = getEl('round-selector');
+    const roundNum = parseInt(selector.value);
 
-    if (!roundNum || roundNum < 1) {
-        alert('올바른 회차 번호를 입력해주세요.');
-        return;
-    }
+    if (!roundNum) return; // Do nothing if default selected
 
     getEl('loader').style.opacity = '1';
     getEl('loader').style.visibility = 'visible';
@@ -223,7 +233,9 @@ window.resetToLatest = async () => {
     getEl('loader').style.visibility = 'visible';
 
     state.isHistorical = false;
-    getEl('search-round').value = '';
+    state.isHistorical = false;
+    const selector = getEl('round-selector');
+    if (selector) selector.value = ""; // Reset dropdown
 
     const data = await fetchPredictionData();
     if (data) renderDashboard(data);
