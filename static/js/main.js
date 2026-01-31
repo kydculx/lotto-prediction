@@ -239,7 +239,7 @@ function updateRoundHeader(nextRound) {
     const tag = document.querySelector('.section-tag');
 
     if (state.isHistorical) {
-        header.textContent = `${nextRound - 1}회차 과거 분석 결과 (복원)`;
+        header.textContent = `${nextRound - 1}회차 과거 분석 결과`;
         if (tag) tag.textContent = 'HISTORICAL ANALYSIS';
         const resetButton = getEl('reset-button');
         if (resetButton) resetButton.style.display = 'block';
@@ -269,12 +269,7 @@ function renderPredictionSets(sets, count) {
         container.appendChild(card);
     });
 
-    // Animate progress bars
-    setTimeout(() => {
-        document.querySelectorAll('.confidence-fill').forEach(bar => {
-            bar.style.width = bar.dataset.width;
-        });
-    }, 100);
+    // Animate progress bars - REMOVED
 }
 
 function createPredictionCard(set, index) {
@@ -289,9 +284,6 @@ function createPredictionCard(set, index) {
         </div>
         <div class="numbers-row">
             ${set.numbers.map(n => `<div class="number-ball ${getNumberColorClass(n)}">${n}</div>`).join('')}
-        </div>
-        <div class="confidence-bar">
-            <div class="confidence-fill" style="width: 0%;" data-width="${set.confidence}%"></div>
         </div>
     `;
     return card;
