@@ -148,7 +148,7 @@ body {
 
 /* Features Section */
 .features {
-    padding: 10rem 0;
+    padding: clamp(5rem, 15vw, 10rem) 0;
     background: rgba(0, 0, 0, 0.2);
 }
 
@@ -226,7 +226,7 @@ body {
 
 /* Dashboard Section Overlay */
 .dashboard-section {
-    padding: 10rem 0;
+    padding: clamp(4rem, 12vw, 10rem) 0;
 }
 
 .container {
@@ -272,8 +272,8 @@ h1 {
     backdrop-filter: blur(30px);
     -webkit-backdrop-filter: blur(30px);
     border: 1px solid var(--card-border);
-    border-radius: 2.5rem;
-    padding: 2.5rem;
+    border-radius: clamp(1.5rem, 5vw, 2.5rem);
+    padding: clamp(1.2rem, 5vw, 2.5rem);
     min-width: 0;
     /* Animation assurance */
     opacity: 0;
@@ -351,8 +351,8 @@ h1 {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    gap: 3rem;
-    padding: 2.5rem 3rem;
+    gap: clamp(1.5rem, 5vw, 3rem);
+    padding: clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 5vw, 3rem);
 }
 
 .summary-item {
@@ -365,7 +365,7 @@ h1 {
 .numbers-row {
     display: flex !important;
     flex-direction: row !important;
-    gap: 0.6rem !important;
+    gap: clamp(0.35rem, 2vw, 0.6rem) !important;
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -379,8 +379,8 @@ h1 {
 }
 
 .number-ball {
-    width: clamp(2.4rem, 8vw, 3rem);
-    height: clamp(2.4rem, 8vw, 3rem);
+    width: clamp(2.1rem, 7.5vw, 3rem);
+    height: clamp(2.1rem, 7.5vw, 3rem);
     flex-shrink: 0;
     border-radius: 50%;
     display: flex;
@@ -432,8 +432,8 @@ h1 {
 .prediction-card {
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--card-border);
-    border-radius: 2rem;
-    padding: 2rem;
+    border-radius: clamp(1.2rem, 4vw, 2rem);
+    padding: clamp(1.2rem, 5vw, 2rem);
     opacity: 0;
     animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -515,17 +515,48 @@ h1 {
 
 @media (max-width: 768px) {
     .container {
-        padding: 3rem 1.5rem;
+        padding: 1.5rem 1rem;
     }
 
     .card {
-        padding: 1.5rem;
-        border-radius: 2rem;
+        padding: 1.25rem;
+        border-radius: 1.5rem;
+    }
+
+    .card-header-flex {
+        margin-bottom: 1.2rem;
     }
 
     .summary-item {
         min-width: 100%;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .summary-card {
+        gap: 2rem;
+        padding: 1.5rem 1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .container {
+        padding: 1rem 0.75rem;
+    }
+
+    .card {
+        padding: 1rem;
+        border-radius: 1.2rem;
+    }
+
+    .hero h1 {
+        font-size: 2.8rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 1rem 1.5rem;
+        width: 100%;
+        text-align: center;
     }
 }
 
@@ -583,10 +614,10 @@ h1 {
 
 /* Footer Section - Center Aligned */
 .footer {
-    padding: 8rem 2rem;
+    padding: clamp(4rem, 15vw, 8rem) 1.5rem;
     border-top: 1px solid var(--card-border);
     background: rgba(0, 0, 0, 0.4);
-    margin-top: 10rem;
+    margin-top: clamp(4rem, 15vw, 10rem);
     display: flex;
     justify-content: center;
     align-items: center;
