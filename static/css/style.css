@@ -476,11 +476,11 @@ h1 {
     }
 
     .prediction-card .number-ball {
-        width: 2.0rem;
-        /* Standardizing size */
-        height: 2.0rem;
-        font-size: 0.95rem;
-        /* Balanced font size */
+        width: clamp(2.1rem, 7.5vw, 3rem);
+        /* Matching global .number-ball exactly */
+        height: clamp(2.1rem, 7.5vw, 3rem);
+        font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+        /* Matching global font */
         font-weight: 800;
         margin: 0;
     }
