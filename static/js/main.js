@@ -290,13 +290,11 @@ function createPredictionCard(set, index) {
     card.style.animation = `fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.05}s both`;
 
     card.innerHTML = `
-        <div class="confidence-label">
-            <span>앙상블 세트 ${index + 1}</span>
-            <span style="color: #c084fc; font-weight: 800;">신뢰도 ${set.confidence.toFixed(1)}%</span>
-        </div>
+        <div class="set-index">${index + 1}</div>
         <div class="numbers-row">
             ${set.numbers.map(n => `<div class="number-ball ${getNumberColorClass(n)}">${n}</div>`).join('')}
         </div>
+        <div class="set-confidence">${set.confidence.toFixed(1)}%</div>
     `;
     return card;
 }
