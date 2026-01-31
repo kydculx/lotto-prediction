@@ -469,11 +469,11 @@ h1 {
     }
 
     .prediction-card .number-ball {
-        width: clamp(1.8rem, 8vw, 2.2rem);
-        /* Smaller ball */
-        height: clamp(1.8rem, 8vw, 2.2rem);
-        font-size: 1.1rem;
-        /* Maximize font size within small ball */
+        width: clamp(1.5rem, 8vw, 1.8rem);
+        /* Reduced from 1.8rem minimum */
+        height: clamp(1.5rem, 8vw, 1.8rem);
+        font-size: 1rem;
+        /* Slightly reduced font to match smaller ball */
         font-weight: 800;
         margin: 0;
     }
@@ -484,9 +484,9 @@ h1 {
     }
 
     .set-index {
-        font-size: 0.9rem;
-        width: 1.5rem;
-        /* Narrow index */
+        font-size: 0.85rem;
+        width: 1.25rem;
+        /* Narrower index */
     }
 
     .set-confidence {
