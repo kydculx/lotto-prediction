@@ -158,6 +158,13 @@ body {
     padding: 0 2rem;
 }
 
+@media (max-width: 640px) {
+    .section-container {
+        padding: 0 1rem;
+        /* Reduced padding to fit prediction cards */
+    }
+}
+
 .section-tag {
     font-size: 0.8rem;
     font-weight: 800;
