@@ -78,7 +78,7 @@ async function fetchStats() {
             }
         }
 
-        renderBallRow('latest-draw', data.latest_draw, 2);
+        renderBallRow('latest-draw', data.latest_draw);
 
         // Fetch frequency data and init chart
         const freqResponse = await fetch('./data/frequencies.json');
@@ -264,9 +264,9 @@ function updateRoundHeader(nextRound) {
 }
 
 function renderSummaryStats(hotCold) {
-    renderBallRow('hot-numbers', hotCold.hot.slice(0, 6).map(n => n[0]), 2.2);
-    renderBallRow('cold-numbers', hotCold.cold.slice(0, 6).map(n => n[0]), 2.2);
-    renderBallRow('overdue-numbers', hotCold.overdue.slice(0, 5).map(n => n[0]), 2.2);
+    renderBallRow('hot-numbers', hotCold.hot.slice(0, 6).map(n => n[0]));
+    renderBallRow('cold-numbers', hotCold.cold.slice(0, 6).map(n => n[0]));
+    renderBallRow('overdue-numbers', hotCold.overdue.slice(0, 5).map(n => n[0]));
 }
 
 function renderPredictionSets(sets, count) {
@@ -337,7 +337,7 @@ function renderEngineInsights(predictions) {
             <div id="engine-balls-${key}" class="numbers-row" style="justify-content: center;"></div>
         `;
         container.appendChild(div);
-        renderBallRow(`engine-balls-${key}`, nums, 2.0);
+        renderBallRow(`engine-balls-${key}`, nums);
     });
 }
 
