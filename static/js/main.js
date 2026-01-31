@@ -233,7 +233,6 @@ window.resetToLatest = async () => {
     getEl('loader').style.visibility = 'visible';
 
     state.isHistorical = false;
-    state.isHistorical = false;
     const selector = getEl('round-selector');
     if (selector) selector.value = ""; // Reset dropdown
 
@@ -281,7 +280,6 @@ function renderPredictionSets(sets, count) {
         container.appendChild(card);
     });
 
-    // Animate progress bars - REMOVED
 }
 
 function createPredictionCard(set, index) {

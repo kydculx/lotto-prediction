@@ -6,6 +6,7 @@
     --accent-glow: rgba(99, 102, 241, 0.5);
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
+    --confidence-color: #c084fc;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
@@ -29,7 +30,9 @@ body {
     min-height: 100vh;
 }
 
-/* Background Mesh - Enhanced Visibility */
+/* --- Components --- */
+
+/* Background Mesh */
 .bg-mesh {
     position: fixed;
     top: 0;
@@ -56,6 +59,68 @@ body {
         opacity: 1;
         transform: scale(1.1);
     }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loader */
+#loader {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.8s ease;
+}
+
+.spinner-outer {
+    width: 70px;
+    height: 70px;
+    border: 3px solid rgba(99, 102, 241, 0.1);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 0.8s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+}
+
+.loading-text {
+    margin-top: 2rem;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.3em;
+    color: var(--text-secondary);
+}
+
+/* --- Layout Sections --- */
+
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 10;
 }
 
 /* Hero Section */
@@ -114,14 +179,19 @@ body {
     animation: fadeInUp 1s ease-out 0.6s backwards;
 }
 
-.btn-primary {
+/* UI Elements */
+.btn-primary,
+.btn-secondary {
     padding: 1.2rem 2.5rem;
-    background: #6366f1;
-    color: white;
     text-decoration: none;
     border-radius: 100px;
     font-weight: 700;
     transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #6366f1;
+    color: white;
     box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
 }
 
@@ -132,14 +202,9 @@ body {
 }
 
 .btn-secondary {
-    padding: 1.2rem 2.5rem;
     background: rgba(255, 255, 255, 0.05);
     color: white;
-    text-decoration: none;
-    border-radius: 100px;
-    font-weight: 700;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
@@ -150,19 +215,6 @@ body {
 .features {
     padding: clamp(5rem, 15vw, 10rem) 0;
     background: rgba(0, 0, 0, 0.2);
-}
-
-.section-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-@media (max-width: 640px) {
-    .section-container {
-        padding: 0 1rem;
-        /* Reduced padding to fit prediction cards */
-    }
 }
 
 .section-tag {
@@ -231,17 +283,9 @@ body {
     line-height: 1.6;
 }
 
-/* Dashboard Section Overlay */
+/* Dashboard Section */
 .dashboard-section {
     padding: clamp(4rem, 12vw, 10rem) 0;
-}
-
-.container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    position: relative;
-    z-index: 10;
 }
 
 header {
@@ -253,7 +297,6 @@ h1 {
     font-size: clamp(2.2rem, 8vw, 4rem);
     font-weight: 800;
     color: #fff;
-    /* Fallback color */
     background: linear-gradient(135deg, #fff 30%, #a5b4fc 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -267,7 +310,7 @@ h1 {
     font-weight: 500;
 }
 
-/* Grid Layout System */
+/* Grid Layout */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
@@ -282,23 +325,15 @@ h1 {
     border-radius: clamp(1.5rem, 5vw, 2.5rem);
     padding: clamp(1.2rem, 5vw, 2.5rem);
     min-width: 0;
-    /* Animation assurance */
     opacity: 0;
     animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.card-full {
-    grid-column: span 12;
-}
-
-.card-main {
-    grid-column: span 12;
-    /* Full width to stack vertically */
-}
-
+.card-full,
+.card-main,
 .card-side {
     grid-column: span 12;
-    /* Full width to stack vertically */
+    /* Full width vertically stacked on desktop by default */
 }
 
 .card-header-flex {
@@ -320,7 +355,6 @@ h1 {
     align-items: center;
     gap: 0.75rem;
     justify-content: center;
-    /* Center align globally */
 }
 
 .set-selector {
@@ -357,7 +391,7 @@ h1 {
     color: white;
 }
 
-/* Summary Card Layout */
+/* Summary Card */
 .summary-card {
     display: flex;
     justify-content: space-around;
@@ -376,10 +410,9 @@ h1 {
     margin-bottom: 1rem;
 }
 
-/* Number Balls System */
+/* Ball Styles */
 .numbers-row {
     display: flex !important;
-    flex-direction: row !important;
     gap: clamp(0.35rem, 2vw, 0.6rem) !important;
     align-items: center;
     justify-content: center;
@@ -404,10 +437,7 @@ h1 {
     font-weight: 800;
     font-size: clamp(0.9rem, 3.5vw, 1.2rem);
     color: white;
-    box-shadow:
-        inset 2px 2px 4px rgba(255, 255, 255, 0.2),
-        inset -4px -4px 8px rgba(0, 0, 0, 0.3),
-        0 8px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.2), inset -4px -4px 8px rgba(0, 0, 0, 0.3), 0 8px 16px rgba(0, 0, 0, 0.4);
     position: relative;
     background-size: 150% 150%;
     transition: transform 0.3s ease;
@@ -442,13 +472,11 @@ h1 {
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.75rem;
-    /* Reduced from 1.5rem */
 }
 
 @media (min-width: 1024px) {
     .prediction-sets {
         grid-template-columns: 1fr 1fr;
-        /* 2-column layout on desktop */
     }
 }
 
@@ -457,58 +485,16 @@ h1 {
     border: 1px solid var(--card-border);
     border-radius: 1.25rem;
     padding: 0.75rem 1rem;
-    /* Compact padding */
     opacity: 0;
     animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-
-    /* Flex Layout for Single Line */
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
 }
 
-/* Mobile Optimization for Single Line */
-@media (max-width: 640px) {
-    .prediction-card {
-        padding: 0.5rem 0.25rem;
-        /* Minimal padding */
-        gap: 2px;
-        /* Tight gap */
-    }
-
-    .prediction-card .number-ball {
-        width: clamp(2.1rem, 7.5vw, 3rem);
-        /* Matching global .number-ball exactly */
-        height: clamp(2.1rem, 7.5vw, 3rem);
-        font-size: clamp(0.9rem, 3.5vw, 1.2rem);
-        /* Matching global font */
-        font-weight: 800;
-        margin: 0;
-    }
-
-    .numbers-row {
-        gap: 2px !important;
-        /* Tightest ball spacing */
-    }
-
-    .set-index {
-        font-size: 0.85rem;
-        width: 1.25rem;
-        /* Narrower index */
-    }
-
-    .set-confidence {
-        font-size: 0.5rem;
-        /* Halved from 0.8rem */
-        min-width: 2rem;
-        /* Compact confidence */
-    }
-}
-
 .prediction-card .number-ball {
     width: clamp(2.4rem, 7vw, 3.2rem);
-    /* Significantly increased */
     height: clamp(2.4rem, 7vw, 3.2rem);
     font-size: clamp(1.1rem, 3.5vw, 1.4rem);
     font-weight: 800;
@@ -519,15 +505,15 @@ h1 {
     font-weight: 800;
     color: var(--text-secondary);
     width: 2.5rem;
-    /* Fixed width for alignment */
     text-align: center;
 }
 
 .set-confidence {
     font-size: 0.6rem;
-    /* Halved from 1.1rem */
+    /* Halved size (Desktop) */
     font-weight: 800;
-    color: #c084fc;
+    color: var(--confidence-color);
+    min-width: 3rem;
     text-align: right;
 }
 
@@ -537,8 +523,7 @@ h1 {
     box-shadow: 0 0 30px rgba(99, 102, 241, 0.1);
 }
 
-/* Confidence bar styles removed */
-/* Insights */
+/* System Insights */
 .insights-container {
     display: flex;
     flex-direction: row;
@@ -549,20 +534,12 @@ h1 {
     flex-wrap: wrap;
 }
 
-@media (max-width: 768px) {
-    .insights-container {
-        flex-direction: column;
-        /* Vertical on mobile */
-    }
-}
-
 .insight-item {
     background: rgba(0, 0, 0, 0.2);
     padding: 1.5rem;
     border-radius: 1.5rem;
     border: 1px solid var(--card-border);
     text-align: center;
-    /* Center-align contents */
 }
 
 .insight-label {
@@ -579,130 +556,14 @@ h1 {
 }
 
 /* Engine Grid */
-/* Engine Grid */
 .engine-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    /* User requested 2 sets per row on desktop */
+    /* 2 columns on desktop */
     gap: 1.5rem;
 }
 
-@media (max-width: 768px) {
-    .engine-grid {
-        grid-template-columns: 1fr;
-        /* Stack on mobile */
-    }
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 1024px) {
-
-    .card-main,
-    .card-side {
-        grid-column: span 12;
-    }
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 1.5rem 1rem;
-    }
-
-    .card {
-        padding: 1.25rem;
-        border-radius: 1.5rem;
-    }
-
-    .card-header-flex {
-        margin-bottom: 1.2rem;
-    }
-
-    .summary-item {
-        min-width: 100%;
-        margin-bottom: 1rem;
-    }
-
-    .summary-card {
-        gap: 2rem;
-        padding: 1.5rem 1rem;
-    }
-}
-
-@media (max-width: 380px) {
-    .container {
-        padding: 1rem 0.75rem;
-    }
-
-    .card {
-        padding: 1rem;
-        border-radius: 1.2rem;
-    }
-
-    .hero h1 {
-        font-size: 2.8rem;
-    }
-
-    .btn-primary,
-    .btn-secondary {
-        padding: 1rem 1.5rem;
-        width: 100%;
-        text-align: center;
-    }
-}
-
-/* Animations & Loader */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-#loader {
-    position: fixed;
-    inset: 0;
-    background: var(--bg-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    transition: opacity 0.8s ease;
-}
-
-.spinner-outer {
-    width: 70px;
-    height: 70px;
-    border: 3px solid rgba(99, 102, 241, 0.1);
-    border-top: 3px solid var(--accent-color);
-    border-radius: 50%;
-    animation: spin 0.8s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.loading-text {
-    margin-top: 2rem;
-    font-weight: 800;
-    font-size: 0.9rem;
-    letter-spacing: 0.3em;
-    color: var(--text-secondary);
-}
-
-/* Footer Section - Center Aligned */
+/* Footer */
 .footer {
     padding: clamp(4rem, 15vw, 8rem) 1.5rem;
     border-top: 1px solid var(--card-border);
@@ -730,4 +591,106 @@ h1 {
     margin-top: 2rem;
     line-height: 1.6;
     color: var(--text-secondary);
+}
+
+/* --- Mobile Responsiveness --- */
+
+@media (max-width: 1024px) {
+
+    /* (Currently redundant as card-main/side are already span 12 globally, but kept for future safety) */
+    .card-full,
+    .card-main,
+    .card-side {
+        grid-column: span 12;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .card {
+        padding: 1.25rem;
+        border-radius: 1.5rem;
+    }
+
+    .card-header-flex {
+        margin-bottom: 1.2rem;
+    }
+
+    .summary-item {
+        min-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .summary-card {
+        gap: 2rem;
+        padding: 1.5rem 1rem;
+    }
+
+    .insights-container {
+        flex-direction: column;
+    }
+
+    .engine-grid {
+        grid-template-columns: 1fr;
+        /* Stack on mobile */
+    }
+}
+
+@media (max-width: 640px) {
+    .section-container {
+        padding: 0 1rem;
+    }
+
+    /* Prediction Card Compact */
+    .prediction-card {
+        padding: 0.5rem 0.25rem;
+        gap: 2px;
+    }
+
+    .prediction-card .number-ball {
+        width: clamp(2.1rem, 7.5vw, 3rem);
+        height: clamp(2.1rem, 7.5vw, 3rem);
+        font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+        margin: 0;
+    }
+
+    .numbers-row {
+        gap: 2px !important;
+    }
+
+    .set-index {
+        font-size: 0.85rem;
+        width: 1.25rem;
+    }
+
+    .set-confidence {
+        font-size: 0.5rem;
+        /* Halved size (Mobile) */
+        min-width: 2rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .container {
+        padding: 1rem 0.75rem;
+    }
+
+    .card {
+        padding: 1rem;
+        border-radius: 1.2rem;
+    }
+
+    .hero h1 {
+        font-size: 2.8rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 1rem 1.5rem;
+        width: 100%;
+        text-align: center;
+    }
 }
