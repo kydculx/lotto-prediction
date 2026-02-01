@@ -12,17 +12,17 @@ from itertools import combinations
 class EnsemblePredictor:
     """앙상블 예측기 v3.0"""
     
-    # 최적화된 엔진 가중치 (자동 최적화)
+    # 최적화된 엔진 가중치 (1~1000회차 학습 결과)
     DEFAULT_WEIGHTS = {
-        'timeseries': 0.2171,
-        'lstm': 0.1638,
-        'statistical': 0.1259,
-        'sequence_correlation': 0.1252,
-        'numerology': 0.1201,
-        'advanced_pattern': 0.0859,
-        'graph': 0.0700,
-        'gap': 0.0491,
-        'pattern': 0.0430,
+        'statistical': 0.5706,
+        'lstm': 0.0960,
+        'sequence_correlation': 0.0867,
+        'pattern': 0.0727,
+        'timeseries': 0.0600,
+        'advanced_pattern': 0.0452,
+        'gap': 0.0412,
+        'graph': 0.0265,
+        'numerology': 0.0011,
     }
     
     def __init__(self, numbers_matrix: np.ndarray, 
@@ -185,6 +185,9 @@ class EnsemblePredictor:
         
         best_combo = None
         best_score = -float('inf')
+        
+        # 점수 딕셔너리 미리 생성 (최적화)
+        scores_dict = dict(candidates)
         
         for combo in combinations(top_candidates, n_numbers):
             combo_list = list(combo)

@@ -19,6 +19,12 @@ import numpy as np
 def run_backtest(matrix, weights, test_rounds=50):
     """백테스팅 실행"""
     n_draws = len(matrix)
+    
+    # 데이터보다 테스트 회차가 많으면 최대치로 조정 (최소 100회 학습 데이터 남김)
+    if test_rounds >= n_draws - 100:
+        test_rounds = n_draws - 100
+        print(f"⚠️ 테스트 회차가 전체 데이터보다 많아 {test_rounds}회로 조정되었습니다.")
+
     hit_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
     
     for i in range(test_rounds):

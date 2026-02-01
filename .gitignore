@@ -7,3 +7,6 @@ __pycache__/
 .agent/
 optimization_result.json
 data/lotto_results.json
+data/*.html
+data/*.db
+src/ensemble_predictor.py.backup

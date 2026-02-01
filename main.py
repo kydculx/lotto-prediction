@@ -33,12 +33,32 @@ def run_backtest(loader, last_n: int = 100):
         if len(train_matrix) < 100: continue
         
         predictor = EnsemblePredictor(train_matrix, use_ml=False, use_validator=False)
-        predicted, _ = predictor.predict_single_set()
-        actual = set(loader.get_draw_by_round(int(df.iloc[test_idx]['round'])))
         
-        hits = len(set(predicted) & actual)
-        hit_counts[hits] += 1
-        total_hits += hits
+        # 실제 정답 번호 가져오기
+        actual = set(loader.get_draw_by_round(int(df.iloc[test_idx]['round'])))
+
+        # 5개 세트 예측
+        predicted_sets = predictor.predict_multiple_sets(5)
+        
+        # 5개 중 가장 잘 맞은 것 기준 (사용자 입장에서의 당첨 여부)
+        best_hit = 0
+        best_set = None
+        
+        for pred, _ in predicted_sets:
+            hits = len(set(pred) & actual)
+            if hits > best_hit:
+                best_hit = hits
+                best_set = pred
+        
+        # 5세트 중 하나라도 없으면 첫 번째 세트로 설정 (출력용)
+        if best_set is None:
+            best_set = predicted_sets[0][0]
+            
+        hit_counts[best_hit] += 1
+        total_hits += best_hit
+        
+        # 실시간 로그 출력 (최고 성적 기준)
+        print(f"[{test_idx+1}회차] 최고 적중: {best_hit}개 | 예측: {sorted(best_set)} | 정답: {sorted(list(actual))}")
     
     LottoFormatter.print_backtest_report(hit_counts, total_hits / last_n if last_n > 0 else 0)
 
