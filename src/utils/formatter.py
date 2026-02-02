@@ -13,7 +13,7 @@ class LottoFormatter:
         print()
         print("=" * 60)
         print(f"🎱 로또 {next_round}회차 예측 시스템")
-        print("   Multi-Engine Ensemble Predictor v3.0 (Refactored)")
+        print("   Multi-Engine Ensemble Predictor v3.1 (Refactored)")
         print("=" * 60)
 
     @staticmethod

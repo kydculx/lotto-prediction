@@ -87,11 +87,11 @@ def main():
             if hits == 6:
                 prize = " (1등!)"
             elif hits == 5:
-                prize = " (2등)"
-            elif hits == 4:
                 prize = " (3등)"
-            elif hits == 3:
+            elif hits == 4:
                 prize = " (4등)"
+            elif hits == 3:
+                prize = " (5등)"
             print(f"  {hits}개 적중: {count:3d}회 ({pct:5.1f}%) {bar}{prize}")
     
     print("\n" + "=" * 60)
