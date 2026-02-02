@@ -20,7 +20,6 @@ sys.path.append(str(PROJECT_ROOT))
 try:
     from src.data_loader import LottoDataLoader
     from src.ensemble_predictor import EnsemblePredictor
-    from src.database_manager import LottoDatabaseManager
 except ImportError as e:
     logger.error(f"모듈 임포트 실패: {e}")
     sys.exit(1)
@@ -38,10 +37,9 @@ def calculate_frequencies(loader):
 def export_results(target_round=None, round_range=None, force=False):
     """분석 엔진을 실행하고 결과를 JSON 및 SQLite에 저장합니다."""
     
-    # 1. 데이터 로드 및 DB 매니저 초기화
+    # 1. 데이터 로드
     loader = LottoDataLoader()
     loader.check_for_updates()
-    db_manager = LottoDatabaseManager()
     
     all_rounds_df = loader.df.copy()
     max_round = int(all_rounds_df['round'].max())
@@ -75,16 +73,30 @@ def export_results(target_round=None, round_range=None, force=False):
         # 1-1. 분석 대상 회차 및 다음 회차 번호 계산
         if current_target:
             target_round_num = current_target
-            analysis_round_num = target_round_num # target_round_num 데이터까지 보고 target_round_num+1을 예측
         else:
             target_round_num = max_round
-            analysis_round_num = target_round_num
 
-        # 1-2. DB 확인 (이미 분석된 데이터가 있으면 익스포트만 수행, force=True이면 무시)
-        existing_data = db_manager.get_prediction(target_round_num) if not force else None
+        # 1-2. 파일 확인 (이미 분석된 JSON 데이터가 있으면 로드하여 익스포트 방지, force=True이면 무시)
+        is_historical = target_round_num < max_round
+        if is_historical:
+            data_dir = PROJECT_ROOT / "data" / "history"
+            prediction_filename = f"prediction_{target_round_num + 1}.json"
+        else:
+            data_dir = PROJECT_ROOT / "data"
+            prediction_filename = "prediction.json"
+            
+        file_path = data_dir / prediction_filename
+        
+        existing_data = None
+        if not force and file_path.exists():
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+            except Exception:
+                existing_data = None
         
         if existing_data:
-            logger.info(f"⏭️ {target_round_num}회차 데이터가 DB에 이미 존재합니다. 익스포트만 수행합니다.")
+            logger.info(f"⏭️ {target_round_num}회차 데이터({prediction_filename})가 이미 존재합니다. 스킵합니다.")
             prediction_data = existing_data
         else:
             # 신규 분석 수행
@@ -122,28 +134,13 @@ def export_results(target_round=None, round_range=None, force=False):
                 'export_time': Path(loader.file_path).stat().st_mtime if loader.file_path.exists() else 0
             }
             
-            # DB 저장
-            db_manager.save_prediction(target_round_num, prediction_data)
-        
-        # 4. JSON 파일 익스포트 (정적 사이트 호환용)
-        is_historical = target_round_num < max_round
-        
-        if is_historical:
-            data_dir = PROJECT_ROOT / "data" / "history"
-            prediction_filename = f"prediction_{target_round_num + 1}.json"
-        else:
-            data_dir = PROJECT_ROOT / "data"
-            prediction_filename = "prediction.json"
-            
-        data_dir.mkdir(parents=True, exist_ok=True)
-
-        # JSON 저장
-        file_path = data_dir / prediction_filename
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(prediction_data, f, ensure_ascii=False, indent=2)
+            # 4. JSON 파일 익스포트
+            data_dir.mkdir(parents=True, exist_ok=True)
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(prediction_data, f, ensure_ascii=False, indent=2)
         
         if not is_historical:
-            # 최신 회차일 때만 stats.json과 frequencies.json 업데이트 및 DB 저장
+            # 최신 회차일 때만 stats.json과 frequencies.json 업데이트
             stats_data = {
                 'total_draws': len(all_rounds_df),
                 'latest_draw': [int(n) for n in all_rounds_df.iloc[-1][['num1','num2','num3','num4','num5','num6']].values],
@@ -156,12 +153,8 @@ def export_results(target_round=None, round_range=None, force=False):
                 json.dump(stats_data, f, ensure_ascii=False, indent=2)
             with open(data_dir / "frequencies.json", 'w', encoding='utf-8') as f:
                 json.dump(freq_data, f, ensure_ascii=False, indent=2)
-                
-            # DB 메타 저장
-            db_manager.save_meta("stats", stats_data)
-            db_manager.save_meta("frequencies", freq_data)
             
-            logger.info(f"💾 최신 데이터 및 통계 저장 완료 (DB & JSON)")
+            logger.info(f"💾 최신 데이터 및 통계 저장 완료 (JSON)")
         else:
             logger.debug(f"💾 역사적 데이터 익스포트 완료: {file_path}")
 
