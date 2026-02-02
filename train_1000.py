@@ -103,15 +103,17 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
         print("💡 신규 학습을 시작합니다 (기본 가중치 사용)")
         base_weights = {
             'statistical': 0.1600,
-            'lstm': 0.1200,
-            'sequence_correlation': 0.1200,
-            'timeseries': 0.1000,
-            'advanced_pattern': 0.1000,
+            'ml': 0.1000,
+            'lstm': 0.1000,
+            'sequence_correlation': 0.1000,
+            'timeseries': 0.0900,
+            'advanced_pattern': 0.0900,
             'pattern': 0.0800,
             'gap': 0.0800,
             'graph': 0.0800,
-            'poisson': 0.0800,
-            'fourier': 0.0800,
+            'poisson': 0.0600,
+            'fourier': 0.0500,
+            'numerology': 0.0100,
         }
         best_score = 0
     

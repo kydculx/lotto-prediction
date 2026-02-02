@@ -12,19 +12,20 @@ from itertools import combinations
 class EnsemblePredictor:
     """앙상블 예측기 v3.0"""
     
-    # 최적화된 엔진 가중치 (1~1000회차 학습 결과 기반 기본값)
+    # 최적화된 엔진 가중치 (자동 최적화)
     DEFAULT_WEIGHTS = {
-        'statistical': 0.45,
-        'lstm': 0.08,
-        'sequence_correlation': 0.08,
-        'pattern': 0.07,
-        'timeseries': 0.06,
-        'advanced_pattern': 0.05,
-        'gap': 0.04,
-        'graph': 0.03,
-        'poisson': 0.05,     # 신규 추가
-        'fourier': 0.05,     # 신규 추가
-        'numerology': 0.001,
+        'poisson': 0.2396,
+        'advanced_pattern': 0.2172,
+        'statistical': 0.2000,
+        'gap': 0.0800,
+        'graph': 0.0745,
+        'timeseries': 0.0599,
+        'fourier': 0.0555,
+        'pattern': 0.0501,
+        'ml': 0.0200,                # 추가
+        'lstm': 0.0168,
+        'sequence_correlation': 0.0063,
+        'numerology': 0.0001,        # 추가
     }
     
     def __init__(self, numbers_matrix: np.ndarray, 
