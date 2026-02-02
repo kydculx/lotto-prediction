@@ -32,7 +32,7 @@ def run_backtest(loader, last_n: int = 100):
         
         if len(train_matrix) < 100: continue
         
-        predictor = EnsemblePredictor(train_matrix, use_ml=False, use_validator=False)
+        predictor = EnsemblePredictor(train_matrix, use_ml=True, use_validator=True)
         
         # 실제 정답 번호 가져오기
         actual = set(loader.get_draw_by_round(int(df.iloc[test_idx]['round'])))

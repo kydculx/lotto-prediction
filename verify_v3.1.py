@@ -20,8 +20,8 @@ def verify_enhanced_predictor():
     print(f"\n[1] 데이터 로드 완료: {len(matrix)}회차")
     
     print("\n[2] 예측기 초기화 (신규 엔진 로드 및 동적 가중치 계산 포함)...")
-    # ML 엔진은 테스트 속도를 위해 제외할 수 있으나, 여기선 전체 로드 확인
-    predictor = EnsemblePredictor(matrix, use_ml=False) 
+    # ML 엔진은 테스트 속도를 위해 제외할 수 있으나, 여기선 전체 로드
+    predictor = EnsemblePredictor(train_matrix, use_ml=True, use_validator=True) 
     
     report = predictor.get_detailed_report(n_sets=3)
     

@@ -11,6 +11,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.data_loader import LottoDataLoader
 from src.ensemble_predictor import EnsemblePredictor
 from src.utils.formatter import LottoFormatter
+import numpy as np
+import json
+import os
 
 
 def main():
@@ -31,9 +34,20 @@ def main():
     print(f"🎯 테스트 데이터: 1001~{len(full_matrix)}회차 (총 {len(full_matrix) - 1000}개)")
     print("\n⏳ AI 모델 학습 중...")
     
-    # 1000회차까지의 데이터로 학습
-    predictor = EnsemblePredictor(train_matrix, use_ml=False, use_validator=False)
+    # 가중치 파일 로드
+    weights_path = Path(__file__).parent / "trained_weights_1000.json"
+    trained_weights = None
     
+    if weights_path.exists():
+        try:
+            with open(weights_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                trained_weights = data.get('weights')
+                score = data.get('best_score', 0)
+            print(f"📂 학습된 가중치 로드 완료 (점수: {score:.4f})")
+        except Exception as e:
+            print(f"⚠️ 가중치 로드 실패: {e}")
+            
     print("✅ 학습 완료! 테스트 시작...\n")
     print("-" * 60)
     
@@ -42,10 +56,23 @@ def main():
     total_hits = 0
     test_count = 0
     
+    # Walk-Forward Validation을 위한 현재 데이터 매트릭스
+    current_matrix = np.array(train_matrix)
+    
     for test_idx in range(1000, len(full_matrix)):
         # 실제 정답
         actual = set(full_matrix[test_idx])
         round_num = int(df.iloc[test_idx]['round'])
+        
+        # 📌 핵심: 매 회차마다 업데이트된 데이터로 예측기 새로 생성 (미래 정보 반영)
+        # 1001회차 예측엔 1~1000회 데이터 사용
+        # 1002회차 예측엔 1~1001회 데이터 사용...
+        predictor = EnsemblePredictor(
+            current_matrix, 
+            weights=trained_weights, 
+            use_ml=True,        # 정확도를 위해 ML 사용
+            use_validator=True  # 정확도를 위해 검증기 사용
+        )
         
         # 5개 세트 예측
         predicted_sets = predictor.predict_multiple_sets(5)
@@ -68,7 +95,14 @@ def main():
         test_count += 1
         
         # 실시간 로그
-        print(f"[{round_num}회차] 최고 적중: {best_hit}개 | 예측: {sorted(best_set)} | 정답: {sorted(list(actual))}")
+        clean_pred = [int(n) for n in best_set]
+        clean_actual = [int(n) for n in actual]
+        print(f"[{round_num}회차] 최고 적중: {best_hit}개 | 예측: {sorted(clean_pred)} | 정답: {sorted(clean_actual)}")
+        
+        # 📌 다음 예측을 위해 정답을 데이터에 추가 (재학습 효과)
+        # full_matrix[test_idx]는 1차원 배열이므로 2차원으로 변환 후 추가
+        new_row = full_matrix[test_idx].reshape(1, 6)
+        current_matrix = np.vstack([current_matrix, new_row])
     
     # 결과 출력
     print("\n" + "=" * 60)

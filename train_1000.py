@@ -4,6 +4,15 @@
 """
 
 import sys
+import os
+
+# 병렬 처리 성능 최적화: 라이브러리 내부 스레딩 비활성화 (프로세스 병렬화 집중)
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 import json
 from pathlib import Path
 
@@ -11,9 +20,27 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.data_loader import LottoDataLoader
 from src.ensemble_predictor import EnsemblePredictor
+from src.optimization_cache import OptimizationCache
 import numpy as np
+
 import multiprocessing as mp
 from functools import partial
+import threading
+import time
+
+
+def worker_eval_cached(args):
+    """캐시된 데이터를 이용한 초고속 평가"""
+    weights, cached_data = args
+    avg_hits, _ = OptimizationCache.evaluate_weights(cached_data, weights)
+    return avg_hits, weights
+
+
+def worker_eval(args):
+    """(구) 병렬 처리를 위한 작업자 함수 wrapper - 더 이상 사용 안 함"""
+    weights, matrix, test_rounds = args
+    avg_hits, _ = run_backtest(matrix, weights, test_rounds=test_rounds, label="parallel")
+    return avg_hits, weights
 
 
 def run_backtest(matrix, weights, test_rounds=100, label=""):
@@ -39,7 +66,7 @@ def run_backtest(matrix, weights, test_rounds=100, label=""):
             continue
         
         # 예측
-        predictor = EnsemblePredictor(train_matrix, weights=weights, use_ml=False, use_validator=False)
+        predictor = EnsemblePredictor(train_matrix, weights=weights, use_ml=True, use_validator=True)
         predicted, _ = predictor.predict_single_set()
         
         # 실제 번호
@@ -133,27 +160,76 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
     print(f"   개체군 크기: {population_size}")
     print(f"   검증 회차: {test_rounds}")
     print()
-    # 가용 코어의 50%만 사용하여 시스템 안정성 확보
-    num_cores = max(1, mp.cpu_count() // 2)
+    
+    # ⚡️ 최적화 캐시 생성 (여기서 한 번만 무거운 연산 수행)
+    cache = OptimizationCache()
+    cached_data = cache.precalculate(matrix, test_rounds)
+    
+    # 가용 코어 전체 사용 (시스템 여유분 1개 확보)
+    num_cores = max(1, mp.cpu_count() - 1)
     
     for gen in range(generations):
         print(f"\n{'='*60}")
         print(f"🧬 세대 {gen+1}/{generations} 평가 중 (CPU 코어 {num_cores}개 활용)")
         print(f"{'='*60}")
         
-        # 병렬 평가를 위한 함수 래퍼 (데이터는 고정, 가중치만 변경)
-        eval_func = partial(run_backtest, matrix, test_rounds=test_rounds, label="parallel")
+        # 병렬 평가를 위한 인자 준비 (캐시 데이터 전달)
+        # cached_data는 읽기 전용이므로 여러 프로세스에서 공유 가능
+        task_args = [(w, cached_data) for w in population]
         
+        # 상태 공유 변수
+        completed_count = 0
+        current_best_in_gen = 0.0
+        lock = threading.Lock()
+        
+        def _progress_monitor():
+            start_time = time.time()
+            spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+            idx = 0
+            
+            while completed_count < population_size:
+                elapsed = time.time() - start_time
+                percent = completed_count / population_size * 100
+                bar_len = 30
+                filled = int(bar_len * completed_count / population_size)
+                bar = "█" * filled + "░" * (bar_len - filled)
+                
+                spin = spinner[idx % len(spinner)]
+                idx += 1
+                
+                # 메인 스레드와 값 충돌 방지 (읽기만 하므로 lock 없어도 안전하지만 명시적으로)
+                curr_score = current_best_in_gen
+                
+                status = f"\r  {spin} [시간: {elapsed:3.0f}s] |{bar}| {percent:5.1f}% ({completed_count}/{population_size}) - 최고점수: {curr_score:.4f}"
+                sys.stdout.write(status)
+                sys.stdout.flush()
+                time.sleep(0.1)
+                
+            # 완료 후 최종 출력
+            elapsed = time.time() - start_time
+            sys.stdout.write(f"\r  ✅ [시간: {elapsed:3.0f}s] |{'█'*30}| 100.0% ({population_size}/{population_size}) - 최고점수: {current_best_in_gen:.4f}\n")
+            sys.stdout.flush()
+
         # 프로세스 풀 생성 및 실행
         pool = mp.Pool(processes=num_cores)
+        
+        # 모니터링 스레드 시작
+        monitor_thread = threading.Thread(target=_progress_monitor)
+        monitor_thread.start()
+        
         try:
             results = []
-            # imap을 사용하여 순차적으로 결과를 받으며 진행률 표시
-            for i, res in enumerate(pool.imap(eval_func, population)):
-                score, _ = res
-                results.append((score, population[i]))
-                print(f"\r  🏃 개체 평가 진행률: [{i+1}/{population_size}] 점수: {score:.4f}", end="", flush=True)
+            # imap_unordered 사용
+            for i, res in enumerate(pool.imap_unordered(worker_eval_cached, task_args)):
+                score, weights = res
+                results.append((score, weights))
+                
+                with lock:
+                    completed_count += 1
+                    if score > current_best_in_gen:
+                        current_best_in_gen = score
             
+            monitor_thread.join() # 스레드 종료 대기
             pool.close()
             pool.join()
             fitness = results
@@ -173,11 +249,27 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
         # 정렬
         fitness.sort(key=lambda x: x[0], reverse=True)
         
+        generation_best_score = fitness[0][0]
+        generation_best_weights = fitness[0][1]
+        
         # 최고 기록 갱신
-        if fitness[0][0] > best_score:
-            best_score = fitness[0][0]
-            best_weights = fitness[0][1].copy()
-            print(f"\n🎯 새로운 최고 점수! {best_score:.4f} (이전: {fitness[0][0]:.4f})")
+        if generation_best_score > best_score:
+            best_score = generation_best_score
+            best_weights = generation_best_weights
+            print(f"\n🎯 새로운 최고 점수! {best_score:.4f}")
+            
+            # 💾 즉시 자동 저장
+            try:
+                save_data = {
+                    "best_score": best_score,
+                    "weights": best_weights,
+                    "generated_at": time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                with open(result_path, 'w', encoding='utf-8') as f:
+                    json.dump(save_data, f, indent=2, ensure_ascii=False)
+                print(f"   💾 가중치가 자동 저장되었습니다: {result_path.name}")
+            except Exception as e:
+                print(f"   ⚠️ 자동 저장 실패: {e}")
         else:
             print(f"\n   현재 세대 최고: {fitness[0][0]:.4f} | 역대 최고: {best_score:.4f}")
         
@@ -217,10 +309,13 @@ def main():
     # 유전 알고리즘 최적화
     best_weights, best_score = genetic_optimize(
         train_matrix,
-        generations=20,    # 원래대로 유지
+        generations=100000,   # 무한에 가까운 반복 (사용자가 중단할 때까지)
         population_size=12,
-        test_rounds=200    # 원래대로 유지 (사용자 요청)
+        test_rounds=200
     )
+    
+    print("\n" + "="*60)
+    print("✅ 학습이 중단되거나 완료되었습니다.")
     
     # 결과 출력
     print("\n📊 최적화된 가중치:")

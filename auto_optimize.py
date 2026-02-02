@@ -5,6 +5,15 @@
 """
 
 import sys
+import os
+
+# 병렬 처리 성능 최적화: 라이브러리 내부 스레딩 비활성화 (프로세스 병렬화 집중)
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 import json
 import time
 from pathlib import Path
@@ -13,10 +22,29 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.data_loader import LottoDataLoader
 from src.ensemble_predictor import EnsemblePredictor
+from src.optimization_cache import OptimizationCache
 import numpy as np
+import multiprocessing as mp
+from functools import partial
+import threading
 
 
-def run_backtest(matrix, weights, test_rounds=50):
+
+def worker_eval_cached(args):
+    """캐시된 데이터를 이용한 초고속 평가"""
+    weights, cached_data = args
+    avg_hits, _ = OptimizationCache.evaluate_weights(cached_data, weights)
+    return avg_hits, weights
+
+
+def worker_eval(args):
+    """(구) 병렬 처리를 위한 작업자 함수 wrapper - 더 이상 사용 안 함"""
+    weights, matrix, test_rounds = args
+    avg_hits, _ = run_backtest(matrix, weights, test_rounds, label="parallel")
+    return avg_hits, weights
+
+
+def run_backtest(matrix, weights, test_rounds=50, label=""):
     """백테스팅 실행"""
     n_draws = len(matrix)
     
@@ -107,12 +135,83 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=30)
     print(f"   테스트 회차: {test_rounds}")
     print()
     
+    # 코어 설정 (시스템 여유분 1개 확보)
+    num_cores = max(1, mp.cpu_count() - 1)
+    
+    # ⚡️ 최적화 캐시 생성
+    cache = OptimizationCache()
+    cached_data = cache.precalculate(matrix, test_rounds)
+
     for gen in range(generations):
-        # 각 개체 평가
-        fitness = []
-        for weights in population:
-            score, _ = run_backtest(matrix, weights, test_rounds)
-            fitness.append((score, weights))
+        print(f"🧬 세대 {gen+1}/{generations} 평가 중 (CPU 코어 {num_cores}개 활용)")
+        
+        # 병렬 평가를 위한 인자 준비 (캐시 데이터)
+        task_args = [(w, cached_data) for w in population]
+        
+        # 상태 공유 변수
+        completed_count = 0
+        current_best_in_gen = 0.0
+        lock = threading.Lock()
+        
+        def _progress_monitor():
+            start_time = time.time()
+            spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+            idx = 0
+            
+            while completed_count < population_size:
+                elapsed = time.time() - start_time
+                percent = completed_count / population_size * 100
+                bar_len = 30
+                filled = int(bar_len * completed_count / population_size)
+                bar = "█" * filled + "░" * (bar_len - filled)
+                
+                spin = spinner[idx % len(spinner)]
+                idx += 1
+                
+                # 메인 스레드와 값 충돌 방지
+                curr_score = current_best_in_gen
+                
+                status = f"\r  {spin} [시간: {elapsed:3.0f}s] |{bar}| {percent:5.1f}% ({completed_count}/{population_size}) - 최고점수: {curr_score:.4f}"
+                sys.stdout.write(status)
+                sys.stdout.flush()
+                time.sleep(0.1)
+                
+            # 완료 후 최종 출력
+            elapsed = time.time() - start_time
+            sys.stdout.write(f"\r  ✅ [시간: {elapsed:3.0f}s] |{'█'*30}| 100.0% ({population_size}/{population_size}) - 최고점수: {current_best_in_gen:.4f}\n")
+            sys.stdout.flush()
+
+        # 프로세스 풀 생성 및 실행
+        pool = mp.Pool(processes=num_cores)
+        
+        # 모니터링 스레드 시작
+        monitor_thread = threading.Thread(target=_progress_monitor)
+        monitor_thread.start()
+        
+        try:
+            fitness = []
+            # imap_unordered 사용
+            for i, res in enumerate(pool.imap_unordered(worker_eval_cached, task_args)):
+                score, weights = res
+                fitness.append((score, weights))
+                
+                with lock:
+                    completed_count += 1
+                    if score > current_best_in_gen:
+                        current_best_in_gen = score
+            
+            monitor_thread.join()
+            pool.close()
+            pool.join()
+            
+        except KeyboardInterrupt:
+            print("\n⚠️ 사용자에 의해 학습이 중단되었습니다.")
+            pool.terminate()
+            raise
+        except Exception as e:
+            print(f"\n❌ 오류 발생: {e}")
+            pool.terminate()
+            raise
         
         # 정렬
         fitness.sort(key=lambda x: x[0], reverse=True)
@@ -121,9 +220,9 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=30)
         if fitness[0][0] > best_score:
             best_score = fitness[0][0]
             best_weights = fitness[0][1].copy()
-            print(f"🎯 세대 {gen+1}: 새로운 최고 점수 = {best_score:.4f}")
+            print(f"🎯 세대 {gen+1} 결과: 새로운 최고 점수 = {best_score:.4f}")
         else:
-            print(f"   세대 {gen+1}: 현재 최고 = {fitness[0][0]:.4f}")
+            print(f"   세대 {gen+1} 결과: 현재 최고 = {fitness[0][0]:.4f}")
         
         # 상위 50% 선택
         survivors = [w for _, w in fitness[:population_size // 2]]
@@ -175,9 +274,9 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='자동 최적화 루프')
-    parser.add_argument('--generations', type=int, default=5, help='세대 수')
-    parser.add_argument('--population', type=int, default=8, help='개체군 크기')
-    parser.add_argument('--test-rounds', type=int, default=30, help='테스트 회차')
+    parser.add_argument('--generations', type=int, default=100000, help='세대 수')
+    parser.add_argument('--population', type=int, default=12, help='개체군 크기')
+    parser.add_argument('--test-rounds', type=int, default=200, help='테스트 회차')
     parser.add_argument('--apply', action='store_true', help='최적화 결과 적용')
     
     args = parser.parse_args()

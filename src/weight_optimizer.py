@@ -25,7 +25,7 @@ class WeightOptimizer:
     def _create_engines(self, train_matrix: np.ndarray) -> Dict:
         """EnsemblePredictor를 활용하여 엔진 생성"""
         from src.ensemble_predictor import EnsemblePredictor
-        predictor = EnsemblePredictor(train_matrix, use_ml=False, use_validator=False)
+        predictor = EnsemblePredictor(train_matrix, use_ml=True, use_validator=True)
         return predictor.engines
     
     def _get_ensemble_scores(self, engines: Dict, weights: Dict[str, float]) -> Dict[int, float]:

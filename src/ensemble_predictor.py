@@ -28,6 +28,9 @@ class EnsemblePredictor:
         'numerology': 0.0001,        # 추가
     }
     
+    # 엔진 클래스 캐시 (로드 1회만 수행)
+    _ENGINE_CLASSES_CACHE = {}
+    
     def __init__(self, numbers_matrix: np.ndarray, 
                  weights: Dict[str, float] = None,
                  use_ml: bool = True,
@@ -60,37 +63,44 @@ class EnsemblePredictor:
         self._initialize_validator()
         
     def _load_engines(self):
-        """src.engines 패키지에서 엔진들을 동적으로 로드"""
-        import importlib
-        import pkgutil
-        import src.engines as engines_pkg
-        from src.engines.base import BaseEngine
-        
-        for loader, module_name, is_pkg in pkgutil.walk_packages(engines_pkg.__path__, engines_pkg.__name__ + "."):
-            if module_name == 'src.engines.base':
+        """src.engines 패키지에서 엔진들을 동적으로 로드 (캐싱 적용)"""
+        # 이미 로드된 클래스가 있다면 캐시에서 사용
+        if not self._ENGINE_CLASSES_CACHE:
+            import importlib
+            import pkgutil
+            import src.engines as engines_pkg
+            from src.engines.base import BaseEngine
+            
+            for loader, module_name, is_pkg in pkgutil.walk_packages(engines_pkg.__path__, engines_pkg.__name__ + "."):
+                if module_name == 'src.engines.base':
+                    continue
+                    
+                try:
+                    module = importlib.import_module(module_name)
+                    for name in dir(module):
+                        obj = getattr(module, name)
+                        if isinstance(obj, type) and issubclass(obj, BaseEngine) and obj is not BaseEngine:
+                            engine_id = obj.__name__.replace('Engine', '').lower()
+                            self._ENGINE_CLASSES_CACHE[engine_id] = obj
+                except Exception as e:
+                    print(f"⚠️ 엔진 모듈 로드 실패 ({module_name}): {e}")
+
+        # 캐시된 클래스로 인스턴스 생성
+        for engine_id, engine_class in self._ENGINE_CLASSES_CACHE.items():
+            # ML 엔진 제외 처리 (use_ml=False일 때)
+            if not self.use_ml and engine_id == 'ml':
                 continue
                 
-            module = importlib.import_module(module_name)
-            for name in dir(module):
-                obj = getattr(module, name)
-                if isinstance(obj, type) and issubclass(obj, BaseEngine) and obj is not BaseEngine:
-                    # 엔진 인스턴스화
-                    engine_id = obj.__name__.replace('Engine', '').lower()
-                    
-                    # ML 엔진 제외 처리 (use_ml=False일 때)
-                    if not self.use_ml and engine_id == 'ml':
+            try:
+                instance = engine_class(self.numbers_matrix)
+                # ML 엔진은 추가 학습 필요
+                if engine_id == 'ml':
+                    if not instance.train():
                         continue
                         
-                    try:
-                        instance = obj(self.numbers_matrix)
-                        # ML 엔진은 추가 학습 필요
-                        if engine_id == 'ml':
-                            if not instance.train():
-                                continue
-                                
-                        self.engines[engine_id] = instance
-                    except Exception as e:
-                        print(f"⚠️ 엔진 {engine_id} 초기화 실패: {e}")
+                self.engines[engine_id] = instance
+            except Exception as e:
+                print(f"⚠️ 엔진 {engine_id} 초기화 실패: {e}")
 
     def _calculate_dynamic_boosts(self):
         """최근 10회차 엔진별 성능을 기반으로 가중치 부스트 계산 (메타 러닝)"""
