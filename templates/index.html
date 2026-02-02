@@ -218,7 +218,7 @@
 
                 <!-- Frequency Chart -->
                 <div class="card card-full">
-                    <div class="card-title">📊 번호별 출현 빈도 (1~45번)</div>
+                    <div class="card-title">📊 번호별 출현 빈도</div>
                     <div class="chart-container">
                         <canvas id="frequencyChart"></canvas>
                     </div>
@@ -226,7 +226,7 @@
 
                 <!-- NEW: Dynamic Weights / Meta Learning Insights -->
                 <div class="card card-full">
-                    <div class="card-title">🚀 실시간 엔진 가중치 부스트 (Meta-Learning)</div>
+                    <div class="card-title">🚀 실시간 엔진 가중치 부스트</div>
                     <div id="dynamic-weights-container" class="dynamic-weights-grid"
                         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
                         <!-- JS로 채워짐 -->
@@ -240,11 +240,11 @@
                         <div class="set-selector">
                             <label for="set-count">개수:</label>
                             <select id="set-count" onchange="window.updateSetCount(this.value)">
-                                <option value="5" selected>5개 세트</option>
-                                <option value="10">10개 세트</option>
-                                <option value="30">30개 세트</option>
-                                <option value="50">50개 세트</option>
-                                <option value="100">100개 세트 (전체)</option>
+                                <option value="5" selected>5개</option>
+                                <option value="10">10개</option>
+                                <option value="30">30개</option>
+                                <option value="50">50개</option>
+                                <option value="100">100개</option>
                             </select>
                         </div>
                     </div>
