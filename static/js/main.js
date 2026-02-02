@@ -196,6 +196,40 @@ function renderDashboard(data, setCount = null) {
     renderSummaryStats(data.hot_cold);
     renderPredictionSets(state.allPredictions, setCount);
     renderEngineInsights(data.engine_predictions);
+    renderDynamicWeights(data.final_weights, data.dynamic_boosts);
+}
+
+function renderDynamicWeights(weights, boosts) {
+    const container = getEl('dynamic-weights-container');
+    if (!container || !weights) return;
+
+    container.innerHTML = '';
+
+    // 가중치 높은 순으로 정렬
+    const sortedEngines = Object.keys(weights).sort((a, b) => weights[b] - weights[a]);
+
+    sortedEngines.forEach((name, idx) => {
+        const weight = (weights[name] * 100).toFixed(1);
+        const boost = boosts[name] || 1.0;
+        const boostPct = ((boost - 1.0) * 100).toFixed(0);
+
+        const card = document.createElement('div');
+        card.style.cssText = `
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out ${0.1 * idx}s both;
+        `;
+
+        card.innerHTML = `
+            <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 0.25rem;">${name.toUpperCase()}</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #f8fafc;">${weight}%</div>
+            ${boost > 1.001 ? `<div style="font-size: 0.6rem; color: #34d399; margin-top: 0.25rem;">+${boostPct}% 🔥 Boost</div>` : ''}
+        `;
+        container.appendChild(card);
+    });
 }
 
 // --- Global Actions ---
@@ -311,6 +345,8 @@ function renderEngineInsights(predictions) {
         'numerology': '수학적 분석',
         'ml': '머신러닝',
         'gap': '간격 분석',
+        'poisson': '포아송 확률 분석',
+        'fourier': '푸리에 주파수 분석',
         'advanced_pattern': '심화 패턴 분석',
         'advancedpattern': '심화 패턴 분석',
         'sequence_correlation': '수열 상관관계 분석',

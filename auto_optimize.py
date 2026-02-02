@@ -77,15 +77,16 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=30)
     
     # 초기 가중치
     base_weights = {
-        'advanced_pattern': 0.21,
-        'sequence_correlation': 0.175,
-        'lstm': 0.164,
-        'timeseries': 0.093,
-        'gap': 0.093,
-        'statistical': 0.082,
-        'graph': 0.07,
-        'numerology': 0.07,
-        'pattern': 0.043,
+        'statistical': 0.20,
+        'advanced_pattern': 0.15,
+        'sequence_correlation': 0.15,
+        'lstm': 0.10,
+        'timeseries': 0.08,
+        'gap': 0.08,
+        'poisson': 0.08,
+        'fourier': 0.08,
+        'graph': 0.05,
+        'pattern': 0.03,
     }
     
     # 초기 개체군 생성

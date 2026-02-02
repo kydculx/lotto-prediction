@@ -30,6 +30,8 @@ def predict():
             'next_round': int(loader.get_latest_round() + 1),
             'hot_cold': report['hot_cold'],
             'engine_predictions': {k: [int(n) for n in v] for k, v in report['engine_predictions'].items()},
+            'final_weights': {k: float(v) for k, v in report['final_weights'].items()},
+            'dynamic_boosts': {k: float(v) for k, v in report['dynamic_boosts'].items()},
             'predicted_sets': [
                 {'numbers': [int(n) for n in s[0]], 'confidence': float(s[1])}
                 for s in report['predicted_sets']

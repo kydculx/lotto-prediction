@@ -87,29 +87,31 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
         except Exception as e:
             print(f"⚠️ 기존 학습 파일 로드 실패, 기본값으로 시작합니다: {e}")
             base_weights = {
-                'timeseries': 0.2000,
                 'statistical': 0.1600,
-                'sequence_correlation': 0.1500,
                 'lstm': 0.1200,
-                'numerology': 0.1100,
+                'sequence_correlation': 0.1200,
+                'timeseries': 0.1000,
                 'advanced_pattern': 0.1000,
+                'pattern': 0.0800,
+                'gap': 0.0800,
                 'graph': 0.0800,
-                'gap': 0.0500,
-                'pattern': 0.0300
+                'poisson': 0.0800,    # 신규 분석기 추가
+                'fourier': 0.0800,    # 신규 분석기 추가
             }
             best_score = 0
     else:
         print("💡 신규 학습을 시작합니다 (기본 가중치 사용)")
         base_weights = {
-            'timeseries': 0.2000,
             'statistical': 0.1600,
-            'sequence_correlation': 0.1500,
             'lstm': 0.1200,
-            'numerology': 0.1100,
+            'sequence_correlation': 0.1200,
+            'timeseries': 0.1000,
             'advanced_pattern': 0.1000,
+            'pattern': 0.0800,
+            'gap': 0.0800,
             'graph': 0.0800,
-            'gap': 0.0500,
-            'pattern': 0.0300
+            'poisson': 0.0800,
+            'fourier': 0.0800,
         }
         best_score = 0
     

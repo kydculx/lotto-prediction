@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로또 AI | 프리미엄 분석 대시보드</title>
-    <link rel="stylesheet" href="static/css/style.css?v=20260201v9">
+    <link rel="stylesheet" href="static/css/style.css?v=3.1">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .chart-container {
@@ -36,9 +36,9 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <div class="hero-badge">AI ENSEMBLE SYSTEM V2.0</div>
+            <div class="hero-badge">AI ENSEMBLE SYSTEM V3.1</div>
             <h1><span class="gradient-text">Lotto AI Prediction</span></h1>
-            <p>10가지 첨단 알고리즘과 앙상블 딥러닝 기술로<br>방대한 당첨 데이터를 분석하여 최적의 조합을 도출합니다.</p>
+            <p>신규 <b>Poisson & Fourier</b> 엔진을 포함한 <b>12가지</b> 알고리즘과<br>실시간 메타 러닝 기술로 최적의 조합을 도출합니다.</p>
             <div class="hero-btns">
                 <a href="#dashboard" class="btn-primary">실시간 분석 결과 보기</a>
                 <a href="#features" class="btn-secondary">분석 엔진 기술 소개</a>
@@ -50,7 +50,7 @@
     <section id="features" class="features">
         <div class="section-container">
             <div class="section-tag">TECHNOLOGY</div>
-            <h2 class="section-title">10대 분석 엔진의 핵심 기술</h2>
+            <h2 class="section-title">12대 분석 엔진의 핵심 기술</h2>
             <div class="features-grid">
                 <div class="feature-item">
                     <div class="feature-icon">
@@ -173,8 +173,19 @@
                             <path d="M12 12l3 2" />
                         </svg>
                     </div>
-                    <h3>Ensemble Optimization</h3>
-                    <p>모든 개별 엔진의 예측치를 가중치 기반으로 통합하여 단일 알고리즘의 한계를 극복합니다.</p>
+                    <h3>Poisson & Fourier Engine</h3>
+                    <p>포아송 확률 분포와 푸리에 변환(FFT)을 통해 데이터의 희소성과 주기적 파동을 정밀하게 포착합니다.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                    </div>
+                    <h3>Meta-Learning System</h3>
+                    <p>최근 성적이 가장 우수한 엔진을 실시간으로 식별하여 가중치를 동적으로 상향 조정하는 적응형 학습 모델입니다.</p>
                 </div>
             </div>
         </div>
@@ -227,6 +238,15 @@
                     </div>
                 </div>
 
+                <!-- NEW: Dynamic Weights / Meta Learning Insights -->
+                <div class="card card-full">
+                    <div class="card-title">🚀 실시간 엔진 가중치 부스트 (Meta-Learning)</div>
+                    <div id="dynamic-weights-container" class="dynamic-weights-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <!-- JS로 채워짐 -->
+                    </div>
+                </div>
+
                 <!-- Analysis Status / Stats (System Insights) - MOVED UP -->
                 <div class="card card-side">
                     <div class="card-title">📂 시스템 인사이트</div>
@@ -276,7 +296,7 @@
         </div>
     </footer>
 
-    <script src="static/js/main.js?v=20260201v4" defer></script>
+    <script src="static/js/main.js?v=3.1" defer></script>
 </body>
 
 </html>

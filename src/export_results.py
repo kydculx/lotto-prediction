@@ -35,7 +35,7 @@ def calculate_frequencies(loader):
         freq_dict[int(num)] = int(count)
     return freq_dict
 
-def export_results(target_round=None, round_range=None):
+def export_results(target_round=None, round_range=None, force=False):
     """분석 엔진을 실행하고 결과를 JSON 및 SQLite에 저장합니다."""
     
     # 1. 데이터 로드 및 DB 매니저 초기화
@@ -80,8 +80,8 @@ def export_results(target_round=None, round_range=None):
             target_round_num = max_round
             analysis_round_num = target_round_num
 
-        # 1-2. DB 확인 (이미 분석된 데이터가 있으면 익스포트만 수행)
-        existing_data = db_manager.get_prediction(target_round_num)
+        # 1-2. DB 확인 (이미 분석된 데이터가 있으면 익스포트만 수행, force=True이면 무시)
+        existing_data = db_manager.get_prediction(target_round_num) if not force else None
         
         if existing_data:
             logger.info(f"⏭️ {target_round_num}회차 데이터가 DB에 이미 존재합니다. 익스포트만 수행합니다.")
@@ -112,6 +112,8 @@ def export_results(target_round=None, round_range=None):
                 'next_round': target_round_num + 1,
                 'hot_cold': report['hot_cold'],
                 'engine_predictions': {k: [int(n) for n in v] for k, v in report['engine_predictions'].items()},
+                'final_weights': {k: float(v) for k, v in report['final_weights'].items()},
+                'dynamic_boosts': {k: float(v) for k, v in report['dynamic_boosts'].items()},
                 'predicted_sets': [
                     {'numbers': [int(n) for n in s[0]], 'confidence': float(s[1])}
                     for s in report['predicted_sets']
@@ -169,6 +171,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Lotto AI 분석 결과 내보내기")
     parser.add_argument("--round", type=int, help="분석 시점으로 지정할 회차 (예: 100)")
     parser.add_argument("--range", type=str, help="분석할 회차 범위 (예: 1-100)")
+    parser.add_argument("--force", action="store_true", help="기존 분석 결과가 있더라도 새로 분석 수행")
     args = parser.parse_args()
     
     round_range = None
@@ -181,7 +184,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
     try:
-        export_results(target_round=args.round, round_range=round_range)
+        export_results(target_round=args.round, round_range=round_range, force=args.force)
     except Exception as e:
         logger.exception(f"내보내기 중 예기치 않은 오류 발생: {e}")
         sys.exit(1)

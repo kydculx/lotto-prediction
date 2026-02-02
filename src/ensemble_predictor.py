@@ -12,30 +12,35 @@ from itertools import combinations
 class EnsemblePredictor:
     """앙상블 예측기 v3.0"""
     
-    # 최적화된 엔진 가중치 (1~1000회차 학습 결과)
+    # 최적화된 엔진 가중치 (1~1000회차 학습 결과 기반 기본값)
     DEFAULT_WEIGHTS = {
-        'statistical': 0.5706,
-        'lstm': 0.0960,
-        'sequence_correlation': 0.0867,
-        'pattern': 0.0727,
-        'timeseries': 0.0600,
-        'advanced_pattern': 0.0452,
-        'gap': 0.0412,
-        'graph': 0.0265,
-        'numerology': 0.0011,
+        'statistical': 0.45,
+        'lstm': 0.08,
+        'sequence_correlation': 0.08,
+        'pattern': 0.07,
+        'timeseries': 0.06,
+        'advanced_pattern': 0.05,
+        'gap': 0.04,
+        'graph': 0.03,
+        'poisson': 0.05,     # 신규 추가
+        'fourier': 0.05,     # 신규 추가
+        'numerology': 0.001,
     }
     
     def __init__(self, numbers_matrix: np.ndarray, 
                  weights: Dict[str, float] = None,
                  use_ml: bool = True,
-                 use_validator: bool = True):
+                 use_validator: bool = True,
+                 use_dynamic_weight: bool = True): # 동적 가중치 옵션 추가
         self.numbers_matrix = numbers_matrix
         self.use_ml = use_ml
         self.use_validator = use_validator
+        self.use_dynamic_weight = use_dynamic_weight
         
         self.engines = {}
         self.engine_scores = {}
         self.engine_predictions = {}
+        self.dynamic_boosts = {} # 엔진별 성능 가중치 부스트
         self.validator = None
         self.optimizer = None
         
@@ -43,7 +48,11 @@ class EnsemblePredictor:
         self._load_engines()
         
         # 가중치 설정 (로드된 엔진 기준)
-        self.weights = weights or self.DEFAULT_WEIGHTS
+        self.base_weights = weights or self.DEFAULT_WEIGHTS.copy()
+        
+        if self.use_dynamic_weight:
+            self._calculate_dynamic_boosts()
+            
         self._normalize_weights()
         
         self._analyze_sum_stats()
@@ -82,14 +91,59 @@ class EnsemblePredictor:
                     except Exception as e:
                         print(f"⚠️ 엔진 {engine_id} 초기화 실패: {e}")
 
+    def _calculate_dynamic_boosts(self):
+        """최근 10회차 엔진별 성능을 기반으로 가중치 부스트 계산 (메타 러닝)"""
+        lookback = 10
+        if len(self.numbers_matrix) < lookback + 50:
+            self.dynamic_boosts = {k: 1.0 for k in self.engines}
+            return
+
+        performance = {k: 0.0 for k in self.engines}
+        
+        # 최근 lookback 회차 동안 각 엔진의 적중 내역 확인
+        for i in range(1, lookback + 1):
+            idx = -i
+            train_matrix = self.numbers_matrix[:idx]
+            actual = set(self.numbers_matrix[idx])
+            
+            for name, engine_class in self.engines.items():
+                try:
+                    # 임시 엔진 생성 (현재 idx까지의 데이터로)
+                    # ML 엔진은 너무 느리므로 성능 최적화를 위해 일부 엔진만 정밀 검증하거나
+                    # 기존 예측 데이터를 캐싱하는 방식이 좋으나, 여기선 단순화
+                    if name == 'ml' or name == 'lstm':
+                        # 무거운 엔진은 계산 건너뛰거나 기본값 유지
+                        continue
+                        
+                    temp_engine = self.engines[name].__class__(train_matrix)
+                    pred = set(temp_engine.predict())
+                    hits = len(pred & actual)
+                    performance[name] += hits
+                except:
+                    continue
+        
+        # 부스트 계산 (평균 적중수 기반, 최소 0.8 ~ 최대 1.3)
+        max_perf = max(performance.values()) if any(performance.values()) else 1
+        for name in self.engines:
+            if max_perf > 0:
+                # 성능이 좋을수록 부스트 (최대 30% 증가)
+                boost = 1.0 + (performance[name] / max_perf) * 0.3
+            else:
+                boost = 1.0
+            self.dynamic_boosts[name] = boost
+
     def _normalize_weights(self):
-        """현재 로드된 엔진들에 맞춰 가중치 정규화"""
-        active_weights = {k: self.weights.get(k, 0.1) for k in self.engines}
-        total = sum(active_weights.values())
+        """현재 로드된 엔진들과 동적 부스트를 반영하여 가중치 정규화"""
+        temp_weights = {}
+        for k in self.engines:
+            base = self.base_weights.get(k, 0.05)
+            boost = self.dynamic_boosts.get(k, 1.0)
+            temp_weights[k] = base * boost
+            
+        total = sum(temp_weights.values())
         if total > 0:
-            self.weights = {k: v/total for k, v in active_weights.items()}
+            self.weights = {k: v/total for k, v in temp_weights.items()}
         else:
-            # 기본 균등 가중치
             w = 1.0 / len(self.engines) if self.engines else 1.0
             self.weights = {k: w for k in self.engines}
 
@@ -374,6 +428,8 @@ class EnsemblePredictor:
         
         return {
             'engine_predictions': self.engine_predictions,
+            'final_weights': self.weights,
+            'dynamic_boosts': self.dynamic_boosts,
             'ensemble_scores': self.get_ensemble_scores(),
             'hot_cold': self.get_hot_cold_analysis(),
             'repeat_analysis': self.get_repeat_analysis(),
