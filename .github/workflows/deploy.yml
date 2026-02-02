@@ -41,7 +41,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/lotto.db data/history/*.json data/prediction.json data/stats.json data/frequencies.json
+          git add data/
           git commit -m "chore: automated lotto data update [skip ci]" || echo "No changes to commit"
           git push origin main
         env:
