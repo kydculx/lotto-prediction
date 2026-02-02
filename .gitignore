@@ -8,5 +8,4 @@ __pycache__/
 optimization_result.json
 data/lotto_results.json
 data/*.html
-data/*.db
 src/ensemble_predictor.py.backup
