@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.data_loader import LottoDataLoader
 from src.ensemble_predictor import EnsemblePredictor
 import numpy as np
+import multiprocessing as mp
+from functools import partial
 
 
 def run_backtest(matrix, weights, test_rounds=100, label=""):
@@ -20,12 +22,12 @@ def run_backtest(matrix, weights, test_rounds=100, label=""):
     hit_counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
     
     for i in range(test_rounds + 1):
-        if i % 10 == 0:
+        if not label and i % 10 == 0:
             progress = i / test_rounds
             bar_len = 20
             filled_len = int(bar_len * progress)
             bar = "█" * filled_len + "░" * (bar_len - filled_len)
-            print(f"\r{label} |{bar}| {i:3d}/{test_rounds:3d}", end="", flush=True)
+            print(f"\r|{bar}| {i:3d}/{test_rounds:3d}", end="", flush=True)
             
         if i == test_rounds:
             break
@@ -131,19 +133,42 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
     print(f"   개체군 크기: {population_size}")
     print(f"   검증 회차: {test_rounds}")
     print()
+    # 가용 코어의 50%만 사용하여 시스템 안정성 확보
+    num_cores = max(1, mp.cpu_count() // 2)
     
     for gen in range(generations):
         print(f"\n{'='*60}")
-        print(f"🧬 세대 {gen+1}/{generations} 평가 중...")
+        print(f"🧬 세대 {gen+1}/{generations} 평가 중 (CPU 코어 {num_cores}개 활용)")
         print(f"{'='*60}")
         
-        # 각 개체 평가
-        fitness = []
-        for idx, weights in enumerate(population):
-            label = f"  개체 [{idx+1:2d}/{len(population):2d}]"
-            score, _ = run_backtest(matrix, weights, test_rounds, label=label)
-            fitness.append((score, weights))
-            print(f"\r{label} 평가 완료 ✓ 점수: {score:.4f}")
+        # 병렬 평가를 위한 함수 래퍼 (데이터는 고정, 가중치만 변경)
+        eval_func = partial(run_backtest, matrix, test_rounds=test_rounds, label="parallel")
+        
+        # 프로세스 풀 생성 및 실행
+        pool = mp.Pool(processes=num_cores)
+        try:
+            results = []
+            # imap을 사용하여 순차적으로 결과를 받으며 진행률 표시
+            for i, res in enumerate(pool.imap(eval_func, population)):
+                score, _ = res
+                results.append((score, population[i]))
+                print(f"\r  🏃 개체 평가 진행률: [{i+1}/{population_size}] 점수: {score:.4f}", end="", flush=True)
+            
+            pool.close()
+            pool.join()
+            fitness = results
+        except KeyboardInterrupt:
+            print("\n⚠️ 사용자에 의해 학습이 중단되었습니다. 하위 프로세스를 정리합니다...")
+            pool.terminate()
+            pool.join()
+            raise # 상위로 전달하여 프로그램 종료
+        except Exception as e:
+            print(f"\n❌ 오류 발생: {e}")
+            pool.terminate()
+            pool.join()
+            raise
+            
+        print() 
         
         # 정렬
         fitness.sort(key=lambda x: x[0], reverse=True)
@@ -192,9 +217,9 @@ def main():
     # 유전 알고리즘 최적화
     best_weights, best_score = genetic_optimize(
         train_matrix,
-        generations=20,  # 20세대로 증가 (더 깊은 학습)
+        generations=20,    # 원래대로 유지
         population_size=12,
-        test_rounds=200  # 1000회차 중 마지막 200회로 검증
+        test_rounds=200    # 원래대로 유지 (사용자 요청)
     )
     
     # 결과 출력
