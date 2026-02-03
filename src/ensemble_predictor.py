@@ -12,20 +12,20 @@ from itertools import combinations
 class EnsemblePredictor:
     """앙상블 예측기 v3.0"""
     
-    # 최적화된 엔진 가중치 (자동 최적화)
+    # 최적화된 엔진 가중치 (1~1000회차 학습 결과)
     DEFAULT_WEIGHTS = {
-        'poisson': 0.2396,
-        'advanced_pattern': 0.2172,
-        'statistical': 0.2000,
-        'gap': 0.0800,
-        'graph': 0.0745,
-        'timeseries': 0.0599,
-        'fourier': 0.0555,
-        'pattern': 0.0501,
-        'ml': 0.0200,                # 추가
-        'lstm': 0.0168,
-        'sequence_correlation': 0.0063,
-        'numerology': 0.0001,        # 추가
+        'statistical': 0.2319,
+        'sequence_correlation': 0.1652,
+        'timeseries': 0.1330,
+        'advanced_pattern': 0.1225,
+        'pattern': 0.0972,
+        'lstm': 0.0963,
+        'ml': 0.0909,
+        'graph': 0.0166,
+        'poisson': 0.0157,
+        'gap': 0.0152,
+        'numerology': 0.0114,
+        'fourier': 0.0040,
     }
     
     # 엔진 클래스 캐시 (로드 1회만 수행)
