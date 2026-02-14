@@ -92,6 +92,10 @@ def export_results(target_round=None, round_range=None, force=False):
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     existing_data = json.load(f)
+                
+                # 최신 회차 분석용(prediction.json)인 경우, 파일 내 회차 정보가 실제 대상 회차와 일차하는지 확인
+                if not is_historical and existing_data.get('latest_round') != target_round_num:
+                    existing_data = None
             except Exception:
                 existing_data = None
         
