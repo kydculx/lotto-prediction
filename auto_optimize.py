@@ -63,7 +63,7 @@ def run_backtest(matrix, weights, test_rounds=50, label=""):
             continue
         
         # 예측
-        predictor = EnsemblePredictor(train_matrix, weights=weights, use_ml=False, use_validator=False)
+        predictor = EnsemblePredictor(train_matrix, weights=weights, use_ml=True, use_validator=True)
         predicted, _ = predictor.predict_single_set()
         
         # 실제 번호
