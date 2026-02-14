@@ -4,8 +4,10 @@ on:
   push:
     branches: [ main ]
   schedule:
-    # 매주 토요일 21:00 KST (12:00 UTC) 이후 실행 (로또 추첨 완료 후)
+    # 매주 토요일 21:30 KST (12:30 UTC)
     - cron: '30 12 * * 6'
+    # 매일 정오 12:00 KST (03:00 UTC)
+    - cron: '0 3 * * *'
   workflow_dispatch: # 수동 실행 가능
 
 permissions:
