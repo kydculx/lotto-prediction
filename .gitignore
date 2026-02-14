@@ -6,6 +6,5 @@ __pycache__/
 .gemini/
 .agent/
 optimization_result.json
-data/lotto_results.json
 data/*.html
 src/ensemble_predictor.py.backup
