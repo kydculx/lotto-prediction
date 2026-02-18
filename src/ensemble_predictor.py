@@ -210,14 +210,14 @@ class EnsemblePredictor:
             
         ensemble = {i: 0.0 for i in range(1, 46)}
         
-        # 1. 가중 평균 점수 (55%)
+        # 1. 가중 평균 점수 (65%)
         total_weight = sum(self.weights.get(name, 0) for name in self.engines.keys())
         for name, scores in self.engine_scores.items():
             weight = self.weights.get(name, 0) / total_weight if total_weight > 0 else 0
             for num, score in scores.items():
-                ensemble[num] += score * weight * 0.55
+                ensemble[num] += score * weight * 0.65
         
-        # 2. 투표 기반 점수 (30%)
+        # 2. 투표 기반 점수 (35%)
         vote_counts = Counter()
         for predictions in self.engine_predictions.values():
             for num in predictions:
@@ -226,12 +226,7 @@ class EnsemblePredictor:
         max_votes = max(vote_counts.values()) if vote_counts.values() else 1
         for num in range(1, 46):
             vote_score = vote_counts.get(num, 0) / max_votes
-            ensemble[num] += vote_score * 0.30
-        
-        # 3. 직전 회차 반복 보너스 (15%)
-        last_draw = set(self.numbers_matrix[-1])
-        for num in last_draw:
-            ensemble[num] += 0.15
+            ensemble[num] += vote_score * 0.35
         
         # 정규화
         max_score = max(ensemble.values()) if ensemble.values() else 1

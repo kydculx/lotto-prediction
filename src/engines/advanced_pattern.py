@@ -59,7 +59,7 @@ class AdvancedPatternEngine(BaseEngine):
         max_m = max(markov_scores.values()) or 1
         
         for num in range(1, 46):
-            scores[num] = (markov_scores[num]/max_m) * 0.4 + skips[num] * 0.4 + (0.2 if num in last_draw else 0.1)
+            scores[num] = (markov_scores[num]/max_m) * 0.5 + skips[num] * 0.5
         return scores
     
     def predict(self, n_numbers: int = 6) -> List[int]:
