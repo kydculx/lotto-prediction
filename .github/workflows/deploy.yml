@@ -45,6 +45,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git add data/
           git commit -m "chore: automated lotto data update [skip ci]" || echo "No changes to commit"
+          git pull --rebase origin main
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
