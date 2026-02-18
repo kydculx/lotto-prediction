@@ -38,9 +38,10 @@ async function initApp() {
 
 async function fetchPredictionData(targetRound = null) {
     try {
+        const timestamp = new Date().getTime();
         const path = targetRound
-            ? `./data/history/prediction_${targetRound}.json`
-            : './data/prediction.json';
+            ? `./data/history/prediction_${targetRound}.json?t=${timestamp}`
+            : `./data/prediction.json?t=${timestamp}`;
 
         const response = await fetch(path);
         if (!response.ok) {
@@ -57,7 +58,8 @@ async function fetchPredictionData(targetRound = null) {
 
 async function fetchStats() {
     try {
-        const response = await fetch('./data/stats.json');
+        const timestamp = new Date().getTime();
+        const response = await fetch(`./data/stats.json?t=${timestamp}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
@@ -81,7 +83,7 @@ async function fetchStats() {
         renderBallRow('latest-draw', data.latest_draw);
 
         // Fetch frequency data and init chart
-        const freqResponse = await fetch('./data/frequencies.json');
+        const freqResponse = await fetch(`./data/frequencies.json?t=${timestamp}`);
         if (freqResponse.ok) {
             const freqData = await freqResponse.json();
             initFrequencyChart(freqData);
