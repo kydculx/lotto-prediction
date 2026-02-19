@@ -309,7 +309,7 @@ def main():
     # 유전 알고리즘 최적화
     best_weights, best_score = genetic_optimize(
         train_matrix,
-        generations=100000,   # 무한에 가까운 반복 (사용자가 중단할 때까지)
+        generations=10000,   # 무한에 가까운 반복 (사용자가 중단할 때까지)
         population_size=12,
         test_rounds=200
     )
