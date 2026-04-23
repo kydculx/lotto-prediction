@@ -310,8 +310,8 @@ def main():
     best_weights, best_score = genetic_optimize(
         train_matrix,
         generations=10000,   # 무한에 가까운 반복 (사용자가 중단할 때까지)
-        population_size=12,
-        test_rounds=200
+        population_size=50,
+        test_rounds=500
     )
     
     print("\n" + "="*60)
