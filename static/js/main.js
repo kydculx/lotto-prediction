@@ -178,7 +178,21 @@ function initFrequencyChart(freqData) {
                 },
                 x: {
                     grid: { display: false },
-                    ticks: { color: '#94a3b8', font: { size: 10 }, autoSkip: false }
+                    ticks: { 
+                        color: '#94a3b8', 
+                        font: { size: window.innerWidth < 400 ? 7 : 9 },
+                        autoSkip: true,
+                        maxTicksLimit: window.innerWidth < 600 ? 8 : 20,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        callback: function(value, index, values) {
+                            // 모바일에서는 5의 배수만 표시하여 혼잡도 감소
+                            if (window.innerWidth < 600) {
+                                return (value + 1) % 5 === 0 ? (value + 1) : '';
+                            }
+                            return value + 1;
+                        }
+                    }
                 }
             }
         }

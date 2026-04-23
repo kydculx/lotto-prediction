@@ -329,11 +329,25 @@ h1 {
     animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.card-full,
-.card-main,
+.card-full {
+    grid-column: span 12;
+}
+
+.card-main {
+    grid-column: span 12;
+}
+
 .card-side {
     grid-column: span 12;
-    /* Full width vertically stacked on desktop by default */
+}
+
+@media (min-width: 1024px) {
+    .card-main {
+        grid-column: span 8;
+    }
+    .card-side {
+        grid-column: span 4;
+    }
 }
 
 .card-header-flex {
