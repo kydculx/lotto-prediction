@@ -1,8 +1,10 @@
 let cachedData = null;
 const state = {
     allPredictions: [],
+    allResults: [], // 역대 당첨 번호 저장
     currentRound: null,
-    isHistorical: false
+    isHistorical: false,
+    winningNumbers: null
 };
 
 // DOM Utility: Get element with error check
@@ -20,7 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initApp() {
     try {
-        const [predictionData] = await Promise.all([fetchPredictionData(), fetchStats()]);
+        const [predictionData, resultsData] = await Promise.all([
+            fetchPredictionData(),
+            fetchLottoResults(),
+            fetchStats()
+        ]);
+        
+        if (resultsData) state.allResults = resultsData;
         if (predictionData) {
             // Simulated AI processing time for premium feel
             setTimeout(() => {
@@ -53,6 +61,16 @@ async function fetchPredictionData(targetRound = null) {
     } catch (error) {
         handleFetchError(error, '분석 데이터');
         return null;
+    }
+}
+
+async function fetchLottoResults() {
+    try {
+        const response = await fetch('./data/lotto_results.json');
+        return await response.json();
+    } catch (e) {
+        console.error('Failed to load lotto results:', e);
+        return [];
     }
 }
 
@@ -188,6 +206,15 @@ window.updateSetCount = function (count) {
 function renderDashboard(data, setCount = null) {
     state.allPredictions = data.predicted_sets;
     state.currentRound = data.next_round;
+    
+    // 당첨번호 조회 로직 강화
+    if (data.actual_winning_numbers) {
+        state.winningNumbers = data.actual_winning_numbers;
+    } else {
+        // lotto_results.json에서 해당 회차의 당첨번호 찾기
+        const historicalResult = state.allResults.find(r => r.round === data.next_round);
+        state.winningNumbers = historicalResult ? historicalResult.numbers : null;
+    }
 
     if (setCount === null) {
         const selector = getEl('set-count');
@@ -199,6 +226,9 @@ function renderDashboard(data, setCount = null) {
     renderPredictionSets(state.allPredictions, setCount);
     renderEngineInsights(data.engine_predictions);
     renderDynamicWeights(data.final_weights, data.dynamic_boosts);
+    
+    // 상세 적중 대조 렌더링
+    renderMatchAnalysis();
 }
 
 function renderDynamicWeights(weights, boosts) {
@@ -263,6 +293,71 @@ window.searchRound = async () => {
         setTimeout(() => getEl('loader').style.visibility = 'hidden', 800);
     }, 500);
 };
+
+/**
+ * 🔍 상세 적중 대조 렌더링 함수
+ */
+function renderMatchAnalysis() {
+    const section = getEl('match-analysis-section');
+    const winningDisplay = getEl('winning-numbers-display');
+    const tableBody = getEl('match-analysis-body');
+    const filterSelect = getEl('min-hit-filter');
+
+    if (!section || !tableBody) return;
+
+    // 당첨번호가 있으면 대조 화면 표시
+    if (!state.winningNumbers || state.winningNumbers.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
+
+    const winningNums = state.winningNumbers;
+    const minHit = filterSelect ? parseInt(filterSelect.value) : 2;
+
+    // 2. 당첨 번호 상단 배너 표시
+    winningDisplay.innerHTML = `
+        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem; font-weight: 600;">
+            ${state.currentRound}회 공식 당첨 번호
+        </div>
+        <div class="numbers-row" style="justify-content: center;">
+            ${winningNums.map(n => createBall(n)).join('')}
+        </div>
+    `;
+
+    // 3. 적중 조합 필터링 및 렌더링
+    tableBody.innerHTML = '';
+    
+    // 순위 계산 (상위 스코프의 getRank 사용)
+    const matchedSets = state.allPredictions
+        .map(set => ({
+            set: set.numbers,
+            hitCount: set.numbers.filter(n => winningNums.includes(n)).length
+        }))
+        .filter(item => item.hitCount >= minHit)
+        .sort((a, b) => b.hitCount - a.hitCount);
+
+    if (matchedSets.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="2" style="padding: 3rem; color: #64748b;">선택한 조건(${minHit}개 이상)에 맞는 적중 조합이 없습니다.</td></tr>`;
+        return;
+    }
+
+    matchedSets.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${getRank(item.hitCount)}</td>
+            <td>
+                <div class="match-row-numbers">
+                    ${item.set.map(n => {
+                        const isMatched = winningNums.includes(n);
+                        return createBall(n, isMatched ? 'matched-num' : '');
+                    }).join('')}
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
 
 window.resetToLatest = async () => {
     getEl('loader').style.opacity = '1';
@@ -388,10 +483,28 @@ function renderBallRow(containerId, numbers, size) {
     `).join('');
 }
 
+function getRank(hitCount) {
+    switch (hitCount) {
+        case 6: return '<span class="rank-badge rank-1">1등</span>';
+        case 5: return '<span class="rank-badge rank-2">2등</span>';
+        case 4: return '<span class="rank-badge rank-3">3등</span>';
+        case 3: return '<span class="rank-badge rank-4">4등</span>';
+        case 2: return '<span class="rank-badge rank-5">5등</span>';
+        default: return `<span style="color: #64748b; font-size: 0.8rem;">${hitCount}개</span>`;
+    }
+}
+
 function getNumberColorClass(num) {
     if (num <= 10) return 'num-1-10';
     if (num <= 20) return 'num-11-20';
     if (num <= 30) return 'num-21-30';
     if (num <= 40) return 'num-31-40';
     return 'num-41-45';
+}
+
+/**
+ * ⚽ 번호 볼 HTML 생성 헬퍼
+ */
+function createBall(num, extraClass = '') {
+    return `<div class="number-ball ${getNumberColorClass(num)} ${extraClass}">${num}</div>`;
 }

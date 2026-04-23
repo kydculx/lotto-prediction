@@ -20,6 +20,164 @@
                 height: 250px;
             }
         }
+
+        /* 🔍 Match Analysis Styles */
+        .stats-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 2rem;
+            padding: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .winning-display-banner {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 1px solid rgba(var(--accent-rgb), 0.2);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .match-analysis-table-container {
+            width: 100%;
+            background: rgba(255,255,255,0.02);
+            border-radius: 1rem;
+            border: 1px solid var(--card-border);
+            overflow-x: auto; /* 가로 스크롤 허용 */
+            -webkit-overflow-scrolling: touch;
+        }
+        .match-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            table-layout: fixed;
+        }
+        .match-table th, .match-table td {
+            padding: 1rem 0.5rem;
+            border-bottom: 1px solid var(--card-border);
+            vertical-align: middle;
+            text-align: center;
+        }
+        .match-table th:first-child, 
+        .match-table td:first-child {
+            width: 50px;
+            color: var(--text-secondary);
+        }
+        .match-table th {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .match-row-numbers {
+            display: flex;
+            gap: 0.4rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .match-row-numbers .number-ball {
+            width: 32px;
+            height: 32px;
+            font-size: 0.85rem;
+            margin: 2px;
+            filter: grayscale(0.8) opacity(0.2);
+            transform: scale(0.9);
+            box-shadow: none;
+        }
+        .match-row-numbers .number-ball.matched-num {
+            filter: none;
+            transform: scale(1.1);
+            z-index: 2;
+            box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.3), 0 4px 8px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .filter-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+            margin-right: 0.5rem;
+        }
+        .filter-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .filter-selector:hover {
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+        .filter-selector select {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+            padding-right: 1rem;
+            appearance: none;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right center;
+        }
+        .filter-selector select option {
+            background: #1e1b4b;
+            color: white;
+            padding: 10px;
+        }
+
+        /* 🏆 Rank Badges */
+        .rank-badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            display: inline-block;
+        }
+        .rank-1 { background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%); color: #451a03; box-shadow: 0 0 10px rgba(234, 179, 8, 0.4); }
+        .rank-2 { background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%); color: #1e293b; box-shadow: 0 0 10px rgba(148, 163, 184, 0.4); }
+        .rank-3 { background: linear-gradient(135deg, #fdba74 0%, #ea580c 100%); color: #431407; box-shadow: 0 0 10px rgba(234, 88, 12, 0.4); }
+        .rank-4 { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .rank-5 { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .stats-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .stats-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 0;
+        }
+        .stats-icon {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 600px) {
+            .stats-card {
+                padding: 1.25rem;
+                border-radius: 1.5rem;
+            }
+        }
     </style>
 </head>
 
@@ -251,6 +409,41 @@
                     <div class="summary-item">
                         <div class="card-title">⏰ 장기 미출현 번호</div>
                         <div id="overdue-numbers" class="numbers-row"></div>
+                    </div>
+                </div>
+
+                <!-- 🔍 Detailed Match Analysis Section (NEW) -->
+                <div class="stats-card" id="match-analysis-section">
+                    <div class="stats-header">
+                        <div class="stats-title-group">
+                            <div class="stats-icon">🔎</div>
+                            <h2 class="stats-title">상세 적중 대조</h2>
+                        </div>
+                        <div class="filter-selector" style="margin-left: auto;">
+                            <select id="min-hit-filter" onchange="renderMatchAnalysis()">
+                                <option value="2">2개 이상</option>
+                                <option value="3">3개 이상</option>
+                                <option value="4">4개 이상</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="winning-numbers-display" class="winning-display-banner">
+                        <!-- 실제 당첨번호 표시 영역 -->
+                    </div>
+
+                    <div class="match-analysis-table-container">
+                        <table class="match-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">순위</th>
+                                    <th>추천 조합 (당첨번호 대조)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="match-analysis-body">
+                                <!-- JS: Match results will be injected here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
