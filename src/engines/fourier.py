@@ -23,42 +23,48 @@ class FourierEngine(BaseEngine):
         if n_draws < 32:
             return {i: 0.5 for i in range(1, 46)}
             
+        # 최신 트렌드 반영을 위해 최근 120회차만 분석 (주기가 묻히지 않도록)
+        window = min(n_draws, 120)
+            
         for num in range(1, 46):
-            # 1. 시계열 생성 (출현: 1, 미출현: -1 로 중심화)
-            series = np.zeros(n_draws)
-            for i, row in enumerate(self.numbers_matrix):
+            # 1. 시계열 생성 (출현: 1, 미출현: 0)
+            series = np.zeros(window)
+            for i, row in enumerate(self.numbers_matrix[-window:]):
                 if num in row:
                     series[i] = 1.0
-                else:
-                    series[i] = -1.0 # 평균을 0 근처로 맞추기 위해 -1 사용
             
             # 2. FFT 수행
             fft_result = np.fft.fft(series)
             
-            # 3. 고주파 노이즈 제거 (반등 위주 분석을 위해 저주파/유의미한 파장 강조)
-            # 신호의 뒷부분(고주파)을 일부 감쇠
-            # fft_result[len(fft_result)//2:] = 0
+            # 3. 저주파(큰 주기 흐름)만 남기고 고주파(단기 노이즈) 제거 (Low-pass filter)
+            # 상위 15% 주파수 대역만 유지
+            cutoff = max(3, int(window * 0.15))
+            fft_result[cutoff:-cutoff+1] = 0
             
-            # 4. 역푸리에 변환을 통해 '다음 시점'의 값을 외삽(Extrapolation)
-            # FFT의 성질을 이용해 원래 신호를 복원하되, 다음 인덱스(n_draws)에서의 값을 구함
-            # x[n] = sum(X[k] * exp(j * 2pi * k * n / N)) / N
-            n = n_draws # 다음 회차 인덱스
-            N = n_draws
+            # 4. 역변환으로 부드러운 주기 곡선(Smoothed signal) 복원
+            smoothed = np.real(np.fft.ifft(fft_result))
             
-            # 주파수 성분 결합
-            k = np.arange(N)
-            # 다음 점에 대한 복소평면상의 회전 기여도 계산
-            extrapolated_val = np.sum(fft_result * np.exp(1j * 2 * np.pi * k * n / N)) / N
+            # 5. 마지막 두 시점(최근 회차)의 레벨과 변화율(Derivative) 추출
+            current_level = smoothed[-1]
+            prev_level = smoothed[-2]
+            trend = current_level - prev_level
             
-            # 실수부 추출 (실제 신호의 연장선)
-            score_val = float(np.real(extrapolated_val))
+            # 곡선의 최소/최대값으로 현재 위치를 정규화
+            level_min, level_max = np.min(smoothed), np.max(smoothed)
+            range_span = (level_max - level_min) if (level_max - level_min) > 0 else 1.0
+            norm_level = (current_level - level_min) / range_span
             
-            # 5. 점수 정규화 (보통 -1.0 ~ 1.0 사이로 나옴)
-            # 시그모이드 형태나 단순 선형 정규화
-            norm_score = (score_val + 1.0) / 2.0
-            scores[num] = max(0.0, min(1.0, norm_score))
+            # 6. 주기 반등 점수 계산
+            # - 상승 추세(trend > 0): 위치가 낮을수록(막 반등 시작) 더 높은 가중치
+            # - 하락 추세(trend <= 0): 위치가 낮을수록(곧 바닥 도달) 적절한 가중치
+            if trend > 0:
+                score = 0.5 + 0.5 * (1.0 - norm_level)
+            else:
+                score = 0.5 * (1.0 - norm_level)
+                
+            scores[num] = max(0.0, min(1.0, score))
             
-        # 점수 편차가 작을 경우 변별력을 위해 스케일링
+        # 점수 정규화 (변별력 강화)
         s_min = min(scores.values())
         s_max = max(scores.values())
         if s_max > s_min:

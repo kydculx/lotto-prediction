@@ -3,8 +3,11 @@ const state = {
     allPredictions: [],
     allResults: [], // 역대 당첨 번호 저장
     currentRound: null,
+    latestPrediction: null, // 최신(예상) 데이터 별도 저장
     isHistorical: false,
-    winningNumbers: null
+    winningNumbers: null,
+    chart: null, // Frequency Chart
+    matchChart: null // Match Analysis Chart
 };
 
 // DOM Utility: Get element with error check
@@ -27,12 +30,20 @@ async function initApp() {
             fetchLottoResults(),
             fetchStats()
         ]);
-        
+
         if (resultsData) state.allResults = resultsData;
         if (predictionData) {
+            state.latestPrediction = predictionData; // 최신 데이터 저장
             // Simulated AI processing time for premium feel
-            setTimeout(() => {
+            setTimeout(async () => {
                 renderDashboard(predictionData);
+
+                // 하단 섹션에 최신 과거 회차 데이터 기본 로드
+                const selector = getEl('round-selector');
+                if (selector && selector.value) {
+                    await window.searchRound(false); // 초기 로드 시에는 스크롤하지 않음
+                }
+
                 finalizeAppLoad();
             }, 1500);
         } else {
@@ -89,16 +100,18 @@ async function fetchStats() {
         // Populate Round Selector
         const selector = getEl('round-selector');
         if (selector) {
-            selector.innerHTML = '<option value="" disabled selected>회차 선택</option>';
+            selector.innerHTML = '<option value="" disabled>회차</option>';
             for (let i = data.total_draws; i >= 1; i--) {
                 const option = document.createElement('option');
                 option.value = i;
                 option.textContent = `${i}회`;
                 selector.appendChild(option);
             }
+            // 최신 과거 회차를 기본값으로 설정
+            selector.value = data.total_draws;
         }
 
-        renderBallRow('latest-draw', data.latest_draw);
+        renderBallRow('latest-draw-container', data.latest_draw);
 
         // Fetch frequency data and init chart
         const freqResponse = await fetch(`./data/frequencies.json?t=${timestamp}`);
@@ -134,13 +147,18 @@ function initFrequencyChart(freqData) {
     const ctx = getEl('frequencyChart');
     if (!ctx) return;
 
+    // 기존 차트 파괴 (중복 생성 방지)
+    if (state.chart) {
+        state.chart.destroy();
+    }
+
     const labels = Object.keys(freqData).sort((a, b) => a - b);
     const counts = labels.map(label => freqData[label]);
 
     const backgroundColors = labels.map(num => getChartColor(parseInt(num), 0.6));
     const borderColors = labels.map(num => getChartColor(parseInt(num), 1));
 
-    new Chart(ctx, {
+    state.chart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels,
@@ -178,15 +196,14 @@ function initFrequencyChart(freqData) {
                 },
                 x: {
                     grid: { display: false },
-                    ticks: { 
-                        color: '#94a3b8', 
+                    ticks: {
+                        color: '#94a3b8',
                         font: { size: window.innerWidth < 400 ? 7 : 9 },
                         autoSkip: true,
                         maxTicksLimit: window.innerWidth < 600 ? 8 : 20,
                         maxRotation: 0,
                         minRotation: 0,
-                        callback: function(value, index, values) {
-                            // 모바일에서는 5의 배수만 표시하여 혼잡도 감소
+                        callback: function (value, index, values) {
                             if (window.innerWidth < 600) {
                                 return (value + 1) % 5 === 0 ? (value + 1) : '';
                             }
@@ -197,6 +214,25 @@ function initFrequencyChart(freqData) {
             }
         }
     });
+}
+
+/**
+ * 📊 차트 데이터 업데이트 함수
+ */
+function updateChart(freqData) {
+    if (!state.chart || !freqData) return;
+
+    const labels = Object.keys(freqData).sort((a, b) => a - b);
+    const counts = labels.map(label => freqData[label]);
+
+    state.chart.data.labels = labels;
+    state.chart.data.datasets[0].data = counts;
+
+    // 색상도 업데이트 (데이터 범위가 달라질 수 있음)
+    state.chart.data.datasets[0].backgroundColor = labels.map(num => getChartColor(parseInt(num), 0.6));
+    state.chart.data.datasets[0].borderColor = labels.map(num => getChartColor(parseInt(num), 1));
+
+    state.chart.update('none'); // 애니메이션 없이 업데이트
 }
 
 function getChartColor(n, alpha) {
@@ -217,32 +253,94 @@ window.updateSetCount = function (count) {
 /**
  * Main dashboard rendering entry point
  */
-function renderDashboard(data, setCount = null) {
+function renderDashboard(data) {
+    if (!data) return;
+
+    // 1. 상단 예상 섹션 렌더링 (항상 최신 데이터 사용)
+    const predData = state.latestPrediction || data;
+    renderPredictionSection(predData);
+
+    // 2. 하단 분석 섹션 렌더링 (검색된 데이터 사용)
+    renderHistorySection(data);
+}
+
+/**
+ * 🔮 상단 예상 섹션 전용 렌더링
+ */
+function renderPredictionSection(data) {
+    const roundHeader = getEl('round-header');
+    if (roundHeader) {
+        roundHeader.innerText = `${data.next_round}회차 예측 분석`;
+    }
+
+    // 핫/콜드/오버듀 넘버
+    renderBallRow('hot-numbers', data.hot_cold.hot.slice(0, 6).map(n => n[0]));
+    renderBallRow('cold-numbers', data.hot_cold.cold.slice(0, 6).map(n => n[0]));
+    renderBallRow('overdue-numbers', data.hot_cold.overdue.slice(0, 5).map(n => n[0]));
+
+    // 차트 업데이트
+    updateChart(data.hot_cold.frequencies);
+
+    // 앙상블 추천 조합
     state.allPredictions = data.predicted_sets;
-    state.currentRound = data.next_round;
-    
-    // 당첨번호 조회 로직 강화
+    const selector = getEl('set-count');
+    const setCount = selector ? parseInt(selector.value) : 10;
+    renderPredictionSets(data.predicted_sets, setCount);
+
+    // 최근 추첨 결과 요약 (시스템 인사이트)
+    const latestDrawContainer = getEl('latest-draw-container');
+    if (latestDrawContainer && state.allResults.length > 0) {
+        const last = state.allResults[0];
+        latestDrawContainer.innerHTML = `
+            <div style="color: var(--accent-color); margin-bottom: 0.5rem; font-size: 0.8rem; font-weight: 700;">
+                ${last.round}회 당첨
+            </div>
+            <div class="numbers-row" style="justify-content: center; gap: 0.35rem !important;">
+                ${last.numbers.map(n => createBall(n)).join('')}
+                <div class="number-ball ball-bonus" style="margin-left: 2px;">${last.bonus}</div>
+            </div>
+        `;
+    }
+
+}
+
+/**
+ * 📜 하단 과거 분석 섹션 전용 렌더링
+ */
+function renderHistorySection(data) {
+
+    // 당첨번호 조회 로직
     if (data.actual_winning_numbers) {
         state.winningNumbers = data.actual_winning_numbers;
     } else {
-        // lotto_results.json에서 해당 회차의 당첨번호 찾기
         const historicalResult = state.allResults.find(r => r.round === data.next_round);
         state.winningNumbers = historicalResult ? historicalResult.numbers : null;
+        state.bonusNumber = historicalResult ? historicalResult.bonus : null;
     }
 
-    if (setCount === null) {
-        const selector = getEl('set-count');
-        setCount = selector ? parseInt(selector.value) : 10;
+    const winningDisplay = getEl('winning-numbers-display');
+    if (state.winningNumbers) {
+        if (winningDisplay) {
+            winningDisplay.innerHTML = `
+                <div style="font-weight: 700; margin-bottom: 1rem; font-size: 1.1rem; color: var(--accent-color);">
+                    🎯 ${data.next_round}회차 실제 당첨 번호
+                </div>
+                <div class="numbers-row" style="justify-content: center;">
+                    ${state.winningNumbers.map(n => createBall(n)).join('')}
+                </div>
+            `;
+            winningDisplay.style.display = 'block';
+        }
+    } else {
+        if (winningDisplay) {
+            winningDisplay.innerHTML = `<div style="color: var(--text-secondary); padding: 1rem;">해당 회차의 당첨 결과가 데이터베이스에 없습니다.</div>`;
+        }
     }
 
-    updateRoundHeader(data.next_round);
-    renderSummaryStats(data.hot_cold);
-    renderPredictionSets(state.allPredictions, setCount);
-    renderEngineInsights(data.engine_predictions);
-    renderDynamicWeights(data.final_weights, data.dynamic_boosts);
-    
-    // 상세 적중 대조 렌더링
-    renderMatchAnalysis();
+    // 적중 대조 테이블 렌더링
+    // 검색된 회차의 예측 조합을 테이블에 사용해야 함
+    state.historyPredictions = data.predicted_sets;
+    renderMatchAnalysis(data.predicted_sets);
 }
 
 function renderDynamicWeights(weights, boosts) {
@@ -284,11 +382,11 @@ window.updateSetCount = (count) => {
     renderPredictionSets(state.allPredictions, parseInt(count));
 };
 
-window.searchRound = async () => {
+window.searchRound = async (shouldScroll = true) => {
     const selector = getEl('round-selector');
     const roundNum = parseInt(selector.value);
 
-    if (!roundNum) return; // Do nothing if default selected
+    if (!roundNum) return;
 
     getEl('loader').style.opacity = '1';
     getEl('loader').style.visibility = 'visible';
@@ -297,9 +395,10 @@ window.searchRound = async () => {
     const data = await fetchPredictionData(roundNum);
 
     if (data) {
-        renderDashboard(data);
-    } else {
-        state.isHistorical = false; // 실패 시 상태 복구
+        renderHistorySection(data);
+        if (shouldScroll) {
+            getEl('history-section').scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     setTimeout(() => {
@@ -311,61 +410,60 @@ window.searchRound = async () => {
 /**
  * 🔍 상세 적중 대조 렌더링 함수
  */
-function renderMatchAnalysis() {
-    const section = getEl('match-analysis-section');
-    const winningDisplay = getEl('winning-numbers-display');
+function renderMatchAnalysis(sets = null) {
     const tableBody = getEl('match-analysis-body');
-    const filterSelect = getEl('min-hit-filter');
+    const chartCtx = getEl('matchAnalysisChart');
 
-    if (!section || !tableBody) return;
+    if (!tableBody) return;
 
-    // 당첨번호가 있으면 대조 화면 표시
+    const targetSets = sets || state.historyPredictions || state.allPredictions || [];
+
     if (!state.winningNumbers || state.winningNumbers.length === 0) {
-        section.style.display = 'none';
+        tableBody.innerHTML = `<tr><td colspan="2" style="padding: 3rem; color: #64748b;">당첨 번호 정보가 없습니다.</td></tr>`;
+        if (state.matchChart) state.matchChart.destroy();
         return;
     }
-    section.style.display = 'block';
 
     const winningNums = state.winningNumbers;
-    const minHit = filterSelect ? parseInt(filterSelect.value) : 2;
-
-    // 2. 당첨 번호 상단 배너 표시
-    winningDisplay.innerHTML = `
-        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem; font-weight: 600;">
-            ${state.currentRound}회 공식 당첨 번호
-        </div>
-        <div class="numbers-row" style="justify-content: center;">
-            ${winningNums.map(n => createBall(n)).join('')}
-        </div>
-    `;
-
-    // 3. 적중 조합 필터링 및 렌더링
-    tableBody.innerHTML = '';
     
-    // 순위 계산 (상위 스코프의 getRank 사용)
-    const matchedSets = state.allPredictions
-        .map(set => ({
+    // 적중 통계 계산 (0~6개)
+    const stats = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    
+    const processedSets = targetSets.map(set => {
+        const hitCount = set.numbers.filter(n => winningNums.includes(n)).length;
+        if (hitCount <= 6) stats[hitCount]++;
+        return {
             set: set.numbers,
-            hitCount: set.numbers.filter(n => winningNums.includes(n)).length
-        }))
+            hitCount: hitCount
+        };
+    });
+
+    // 차트 렌더링
+    renderMatchAnalysisChart(stats);
+
+    const minHit = 3; // 목록에는 3개 이상만 노출
+    const matchedSets = processedSets
         .filter(item => item.hitCount >= minHit)
         .sort((a, b) => b.hitCount - a.hitCount);
 
+    tableBody.innerHTML = '';
+
     if (matchedSets.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="2" style="padding: 3rem; color: #64748b;">선택한 조건(${minHit}개 이상)에 맞는 적중 조합이 없습니다.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="2" style="padding: 3rem; color: #64748b;">3개 이상 적중된 조합이 없습니다.</td></tr>`;
         return;
     }
 
     matchedSets.forEach(item => {
         const tr = document.createElement('tr');
+        const isSecondRank = item.hitCount === 5 && item.set.includes(state.bonusNumber);
         tr.innerHTML = `
-            <td>${getRank(item.hitCount)}</td>
+            <td>${getRank(item.hitCount, isSecondRank)}</td>
             <td>
                 <div class="match-row-numbers">
                     ${item.set.map(n => {
-                        const isMatched = winningNums.includes(n);
-                        return createBall(n, isMatched ? 'matched-num' : '');
-                    }).join('')}
+            const isMatched = winningNums.includes(n);
+            return createBall(n, isMatched ? '' : 'num-grayscale');
+        }).join('')}
                 </div>
             </td>
         `;
@@ -373,45 +471,8 @@ function renderMatchAnalysis() {
     });
 }
 
-window.resetToLatest = async () => {
-    getEl('loader').style.opacity = '1';
-    getEl('loader').style.visibility = 'visible';
 
-    state.isHistorical = false;
-    const selector = getEl('round-selector');
-    if (selector) selector.value = ""; // Reset dropdown
 
-    const data = await fetchPredictionData();
-    if (data) renderDashboard(data);
-
-    setTimeout(() => {
-        getEl('loader').style.opacity = '0';
-        setTimeout(() => getEl('loader').style.visibility = 'hidden', 800);
-    }, 500);
-};
-
-function updateRoundHeader(nextRound) {
-    const header = getEl('round-header');
-    const tag = document.querySelector('.section-tag');
-
-    if (state.isHistorical) {
-        header.textContent = `${nextRound}회차 과거 분석 결과`;
-        if (tag) tag.textContent = 'HISTORICAL ANALYSIS';
-        const resetButton = getEl('reset-button');
-        if (resetButton) resetButton.style.display = 'block';
-    } else {
-        header.textContent = `${nextRound}회차 예상 분석 결과`;
-        if (tag) tag.textContent = 'REAL-TIME ANALYSIS';
-        const resetButton = getEl('reset-button');
-        if (resetButton) resetButton.style.display = 'none';
-    }
-}
-
-function renderSummaryStats(hotCold) {
-    renderBallRow('hot-numbers', hotCold.hot.slice(0, 6).map(n => n[0]));
-    renderBallRow('cold-numbers', hotCold.cold.slice(0, 6).map(n => n[0]));
-    renderBallRow('overdue-numbers', hotCold.overdue.slice(0, 5).map(n => n[0]));
-}
 
 function renderPredictionSets(sets, count) {
     const container = getEl('prediction-sets');
@@ -497,15 +558,16 @@ function renderBallRow(containerId, numbers, size) {
     `).join('');
 }
 
-function getRank(hitCount) {
-    switch (hitCount) {
-        case 6: return '<span class="rank-badge rank-1">1등</span>';
-        case 5: return '<span class="rank-badge rank-2">2등</span>';
-        case 4: return '<span class="rank-badge rank-3">3등</span>';
-        case 3: return '<span class="rank-badge rank-4">4등</span>';
-        case 2: return '<span class="rank-badge rank-5">5등</span>';
-        default: return `<span style="color: #64748b; font-size: 0.8rem;">${hitCount}개</span>`;
+function getRank(hitCount, isSecondRank = false) {
+    if (hitCount === 6) return '<span class="rank-badge rank-1">1등</span>';
+    if (hitCount === 5) {
+        if (isSecondRank) return '<span class="rank-badge rank-2">2등</span>';
+        return '<span class="rank-badge rank-3">3등</span>';
     }
+    if (hitCount === 4) return '<span class="rank-badge rank-4">4등</span>';
+    if (hitCount === 3) return '<span class="rank-badge rank-5">5등</span>';
+
+    return `<span style="color: #64748b; font-size: 0.8rem;">${hitCount}개</span>`;
 }
 
 function getNumberColorClass(num) {
@@ -519,6 +581,70 @@ function getNumberColorClass(num) {
 /**
  * ⚽ 번호 볼 HTML 생성 헬퍼
  */
+/**
+ * ⚽ 번호 볼 HTML 생성 헬퍼
+ */
 function createBall(num, extraClass = '') {
     return `<div class="number-ball ${getNumberColorClass(num)} ${extraClass}">${num}</div>`;
+}
+
+// Tab System Removed
+/**
+ * 📊 적중 분석 차트 생성/업데이트
+ */
+function renderMatchAnalysisChart(stats) {
+    const ctx = getEl('matchAnalysisChart');
+    if (!ctx) return;
+
+    if (state.matchChart) {
+        state.matchChart.destroy();
+    }
+
+    const data = Object.values(stats);
+    const labels = ['0개', '1개', '2개', '3개', '4개', '5개', '6개'];
+
+    state.matchChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '적중 횟수',
+                data: data,
+                backgroundColor: labels.map((_, i) => i >= 3 ? 'rgba(56, 189, 248, 0.6)' : 'rgba(100, 116, 139, 0.3)'),
+                borderColor: labels.map((_, i) => i >= 3 ? '#38bdf8' : '#64748b'),
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#38bdf8',
+                    bodyColor: '#fff',
+                    borderColor: '#1e293b',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { 
+                        color: '#94a3b8',
+                        precision: 0
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8' }
+                }
+            }
+        }
+    });
 }

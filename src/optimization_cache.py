@@ -32,6 +32,8 @@ class OptimizationCache:
         # 캐시 행렬 초기화 (float64로 정밀도 유지)
         self.cached_scores = np.zeros((test_rounds, n_engines, 45), dtype=np.float64)
         self.actual_matrix = np.zeros((test_rounds, 45), dtype=np.int8)
+        self.cached_vote_scores = np.zeros((test_rounds, 45), dtype=np.float64)
+        self.cached_boosts = np.ones((test_rounds, n_engines), dtype=np.float64)
         
         print(f"\n⚡️ 최적화 캐시 생성 중... (Method: Vectorized Matrix, 총 {test_rounds}회차)")
         start_time = time.time()
@@ -51,6 +53,13 @@ class OptimizationCache:
             
             # 엔진별 점수 계산
             scores = predictor.calculate_all_scores()
+            predictions = predictor.get_all_predictions()
+            
+            # 동적 부스트 캐싱
+            for name, boost in predictor.dynamic_boosts.items():
+                if name in self.engine_indices:
+                    idx = self.engine_indices[name]
+                    self.cached_boosts[i, idx] = boost
             
             # 행렬에 채우기
             for name, engine_score in scores.items():
@@ -58,6 +67,17 @@ class OptimizationCache:
                     idx = self.engine_indices[name]
                     for num, score in engine_score.items():
                         self.cached_scores[i, idx, num - 1] = score
+                        
+            # 투표 점수 캐싱
+            from collections import Counter
+            vote_counts = Counter()
+            for name, preds in predictions.items():
+                if name in self.engine_indices:
+                    for num in preds:
+                        vote_counts[num] += 1
+            max_votes = max(vote_counts.values()) if vote_counts.values() else 1
+            for num in range(1, 46):
+                self.cached_vote_scores[i, num - 1] = vote_counts.get(num, 0) / max_votes
             
             # 진행상황 표시
             if (i + 1) % 10 == 0:
@@ -71,6 +91,8 @@ class OptimizationCache:
         return {
             'scores': self.cached_scores,
             'actuals': self.actual_matrix,
+            'vote_scores': self.cached_vote_scores,
+            'boosts': self.cached_boosts,
             'engine_names': self.engine_names
         }
 
@@ -81,31 +103,41 @@ class OptimizationCache:
         """
         cached_scores = cached_data['scores'] # (R, E, 45)
         actuals = cached_data['actuals']      # (R, 45)
+        vote_scores = cached_data.get('vote_scores') # (R, 45)
+        boosts = cached_data.get('boosts')    # (R, E)
         engine_names = cached_data['engine_names']
         
-        # 가중치 벡터 생성 (float64)
-        W = np.zeros(len(engine_names), dtype=np.float64)
-        total_weight = 0.0
+        # W_base 생성 (float64)
+        W_base = np.zeros(len(engine_names), dtype=np.float64)
         
-        for name, weight in weights.items():
-            if weight > 0 and name in engine_names:
-                total_weight += weight
-        
-        if total_weight == 0:
-            return 0.0, {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0}
-            
-        # 정규화하여 벡터에 할당
         for i, name in enumerate(engine_names):
             if name in weights:
-                W[i] = weights[name] / total_weight
+                W_base[i] = weights[name]
         
-        # 1. 앙상블 점수 계산 (행렬 곱)
-        # cached_scores shape: (R, E, 45) n_rounds, n_engines, 45_numbers
-        # W shape: (E,)
-        # We need to contract axis 1 (E) with W.
-        # np.dot contracts the last axis (45) which causes mismatch.
-        # Use tensordot to specify axes: (R, E, 45) x (E) -> sum over E -> (R, 45)
-        ensemble_scores = np.tensordot(cached_scores, W, axes=([1], [0]))
+        if np.sum(W_base) == 0:
+            return 0.0, {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0}
+            
+        # 1. 앙상블 점수 계산
+        # W_eff = W_base * boosts (R, E)
+        if boosts is not None:
+            W_eff = W_base * boosts
+        else:
+            R = cached_scores.shape[0]
+            W_eff = np.tile(W_base, (R, 1))
+            
+        # 정규화 (Row-wise)
+        row_sums = W_eff.sum(axis=1, keepdims=True)
+        row_sums[row_sums == 0] = 1.0
+        W_eff = W_eff / row_sums
+        
+        # cached_scores: (R, E, 45), W_eff: (R, E) -> weighted_scores: (R, 45)
+        weighted_scores = np.einsum('rei,re->ri', cached_scores, W_eff)
+        
+        # 투표 점수와 결합
+        if vote_scores is not None:
+            ensemble_scores = (weighted_scores * 0.65) + (vote_scores * 0.35)
+        else:
+            ensemble_scores = weighted_scores
         
         # 2. 상위 6개 선정 (argsort 사용)
         # argsort는 오름차순이므로 뒤에서 6개를 가져옴

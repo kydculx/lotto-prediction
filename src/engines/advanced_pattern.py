@@ -43,8 +43,31 @@ class AdvancedPatternEngine(BaseEngine):
         probs = {}
         for num in range(1, 46):
             skips = skip_history[num]
-            probs[num] = sum(1 for s in skips if s >= current_skips[num]) / len(skips) if skips else 0.5
-        return probs
+            curr_skip = current_skips[num]
+            
+            if not skips:
+                probs[num] = 0.5
+                continue
+                
+            # 과거 데이터 중 현재 공백기(curr_skip) 이상으로 쉬었던 횟수 (분모: P(X >= k))
+            at_least_curr = sum(1 for s in skips if s >= curr_skip)
+            
+            # 정확히 현재 공백기만큼 쉬고 바로 다음에 출현했던 횟수 (분자: P(X = k))
+            exactly_curr = sum(1 for s in skips if s == curr_skip)
+            
+            if at_least_curr == 0:
+                # 역대 최대 공백기를 이미 갱신한 상태 (출현 임박 극대화)
+                # 평균 공백기 대비 얼마나 오랫동안 안 나왔는지에 따라 점수 부여
+                avg_skip = np.mean(skips)
+                overdue_ratio = curr_skip / avg_skip if avg_skip > 0 else 1.0
+                probs[num] = min(1.0, 0.7 + 0.1 * overdue_ratio) # 최소 0.7 이상, 최대 1.0
+            else:
+                # 해저드 확률 (Hazard Rate): 지금까지 curr_skip만큼 쉬었을 때, 바로 이번에 출현할 확률
+                probs[num] = exactly_curr / at_least_curr
+                
+        # 확률값을 변별력 있게 스케일링
+        max_p = max(probs.values()) or 1.0
+        return {num: p / max_p for num, p in probs.items()}
     
     def get_scores(self) -> Dict[int, float]:
         scores = {i: 0.0 for i in range(1, 46)}

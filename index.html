@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로또 AI | 프리미엄 분석 대시보드</title>
-    <link rel="stylesheet" href="static/css/style.css?v=3.1">
+    <link rel="stylesheet" href="static/css/style.css?v=3.3">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .chart-container {
@@ -17,182 +17,7 @@
 
         @media (max-width: 768px) {
             .chart-container {
-                height: 220px;
-            }
-        }
-
-        /* 🔍 Match Analysis Styles */
-        .stats-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            border-radius: 2rem;
-            padding: 2rem;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-        .winning-display-banner {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-            border: 1px solid rgba(var(--accent-rgb), 0.2);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-        .match-analysis-table-container {
-            width: 100%;
-            background: rgba(255,255,255,0.02);
-            border-radius: 1rem;
-            border: 1px solid var(--card-border);
-            overflow-x: auto; /* 가로 스크롤 허용 */
-            -webkit-overflow-scrolling: touch;
-        }
-        .match-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-            table-layout: fixed;
-        }
-        .match-table th, .match-table td {
-            padding: 1rem 0.5rem;
-            border-bottom: 1px solid var(--card-border);
-            vertical-align: middle;
-            text-align: center;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .match-table th:nth-child(2), 
-        .match-table td:nth-child(2) {
-            width: 240px; /* 공 6개가 넉넉히 들어갈 너비 */
-            min-width: 240px;
-        }
-        .match-table th:nth-child(3), 
-        .match-table td:nth-child(3) {
-            width: 70px;
-        }
-        .match-table th:nth-child(4), 
-        .match-table td:nth-child(4) {
-            width: 90px;
-        }
-        .match-table th:first-child, 
-        .match-table td:first-child {
-            width: 50px;
-            color: var(--text-secondary);
-        }
-        .match-table th {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-        .match-row-numbers {
-            display: flex;
-            gap: 0.3rem;
-            justify-content: center;
-            flex-wrap: nowrap; /* 모바일에서 가로로 길게 표시되도록 */
-        }
-        .match-row-numbers .number-ball {
-            width: 30px;
-            height: 30px;
-            font-size: 0.8rem;
-            margin: 2px;
-            flex-shrink: 0; /* 공이 찌그러지지 않게 함 */
-            filter: grayscale(0.8) opacity(0.2);
-            transform: scale(0.9);
-            box-shadow: none;
-        }
-        .match-row-numbers .number-ball.matched-num {
-            filter: none;
-            transform: scale(1.1);
-            z-index: 2;
-            box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.3), 0 4px 8px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .filter-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 1rem;
-            margin-right: 0.5rem;
-        }
-        .filter-selector {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            padding: 0.5rem 1rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .filter-selector:hover {
-            border-color: var(--accent-color);
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-2px);
-        }
-        .filter-selector select {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-weight: 800;
-            font-size: 0.9rem;
-            cursor: pointer;
-            outline: none;
-            padding-right: 1rem;
-            appearance: none;
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right center;
-        }
-        .filter-selector select option {
-            background: #1e1b4b;
-            color: white;
-            padding: 10px;
-        }
-
-        /* 🏆 Rank Badges */
-        .rank-badge {
-            padding: 0.25rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -0.02em;
-            display: inline-block;
-        }
-        .rank-1 { background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%); color: #451a03; box-shadow: 0 0 10px rgba(234, 179, 8, 0.4); }
-        .rank-2 { background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%); color: #1e293b; box-shadow: 0 0 10px rgba(148, 163, 184, 0.4); }
-        .rank-3 { background: linear-gradient(135deg, #fdba74 0%, #ea580c 100%); color: #431407; box-shadow: 0 0 10px rgba(234, 88, 12, 0.4); }
-        .rank-4 { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
-        .rank-5 { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
-
-        .stats-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .stats-title-group {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .stats-title {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: #fff;
-            margin: 0;
-        }
-        .stats-icon {
-            font-size: 1.2rem;
-        }
-
-        @media (max-width: 600px) {
-            .stats-card {
-                padding: 1.25rem;
-                border-radius: 1.5rem;
+                height: 250px;
             }
         }
     </style>
@@ -213,17 +38,17 @@
         <div class="hero-content">
             <div class="hero-badge">AI ENSEMBLE SYSTEM V3.1</div>
             <h1><span class="gradient-text">Lotto AI Prediction</span></h1>
-            <p><b>Poisson & Fourier</b> 엔진을 포함한 <b>12가지</b> 알고리즘과<br>실시간 메타 러닝 기술로 최적의 조합을 도출합니다.</p>
+            <p>신규 <b>Poisson & Fourier</b> 엔진을 포함한 <b>12가지</b> 알고리즘과<br>실시간 메타 러닝 기술로 최적의 조합을 도출합니다.</p>
             <div class="hero-btns">
-                <a href="#dashboard" class="btn-primary">실시간 분석 결과 보기</a>
-                <a href="#features" class="btn-secondary">분석 엔진 기술 소개</a>
+                <a href="#prediction-section" class="btn-primary">실시간 예측 번호 보기</a>
+                <a href="#history-section" class="btn-secondary">과거 회차 분석 도구</a>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
     <section id="features" class="features">
-        <div class="section-container">
+        <div class="container">
             <div class="section-tag">TECHNOLOGY</div>
             <h2 class="section-title">12대 분석 엔진의 핵심 기술</h2>
             <div class="features-grid">
@@ -390,26 +215,13 @@
         </div>
     </section>
 
-    <!-- Dashboard Section -->
-    <section id="dashboard" class="dashboard-section">
+    <!-- Prediction Section -->
+    <section id="prediction-section" class="dashboard-section">
         <div class="container">
-            <header>
-                <div class="section-tag">REAL-TIME ANALYSIS</div>
-                <h2 class="section-title" id="round-header">분석 결과 로딩 중...</h2>
-                <div class="search-container"
-                    style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; margin-bottom: 2.5rem; flex-wrap: wrap; align-items: center;">
-                    <div class="set-selector"
-                        style="background: rgba(255,255,255,0.08); border: 1px solid var(--card-border); padding: 0.5rem 1.2rem; border-radius: 12px; display: flex; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                        <label for="round-selector" style="margin-right: 0.8rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">회차 조회:</label>
-                        <select id="round-selector" onchange="window.searchRound()"
-                            style="background: transparent; border: none; color: #fff; font-weight: 800; font-size: 1rem; cursor: pointer; outline: none; appearance: auto;">
-                            <option value="" disabled selected>회차 선택</option>
-                        </select>
-                    </div>
-                    <button id="reset-button" onclick="window.resetToLatest()"
-                        style="display: none; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%); border: 1px solid rgba(99, 102, 241, 0.3); color: #fff; padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">최신 회차로 복귀</button>
-                </div>
-            </header>
+            <div class="section-header-premium">
+                <div class="section-tag">LIVE PREDICTION</div>
+                <h2 id="round-header">분석 결과 로딩 중...</h2>
+            </div>
 
             <div class="dashboard-grid">
                 <!-- Summary stats -->
@@ -428,41 +240,6 @@
                     </div>
                 </div>
 
-                <!-- 🔍 Detailed Match Analysis Section (NEW) -->
-                <div class="card card-full stats-card" id="match-analysis-section" style="display: none;">
-                    <div class="stats-header">
-                        <div class="stats-title-group">
-                            <div class="stats-icon">🔎</div>
-                            <h2 class="stats-title">상세 적중 대조</h2>
-                        </div>
-                        <div class="filter-selector" style="margin-left: auto;">
-                            <select id="min-hit-filter" onchange="renderMatchAnalysis()">
-                                <option value="2">2개 이상</option>
-                                <option value="3">3개 이상</option>
-                                <option value="4">4개 이상</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div id="winning-numbers-display" class="winning-display-banner">
-                        <!-- 실제 당첨번호 표시 영역 -->
-                    </div>
-
-                    <div class="match-analysis-table-container">
-                        <table class="match-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px;">순위</th>
-                                    <th>추천 조합 (당첨번호 대조)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="match-analysis-body">
-                                <!-- JS: Match results will be injected here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
                 <!-- Frequency Chart -->
                 <div class="card card-full">
                     <div class="card-title">📊 번호별 출현 빈도</div>
@@ -471,29 +248,7 @@
                     </div>
                 </div>
 
-                <!-- NEW: Dynamic Weights / Meta Learning Insights -->
-                <div class="card card-full">
-                    <div class="card-title">🚀 실시간 엔진 가중치 부스트</div>
-                    <div id="dynamic-weights-container" class="dynamic-weights-grid"
-                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                        <!-- JS로 채워짐 -->
-                    </div>
-                </div>
-
-                <!-- Analysis Status / Stats (System Insights) -->
-                <div class="card card-side">
-                    <div class="card-title">📂 최근 추첨 결과</div>
-                    <div id="system-insights" class="insights-container">
-                        <div class="insight-item">
-                            <div id="total-draws" class="insight-value">-</div>
-                            <!-- </div>
-                        <div class="insight-item"> -->
-                            <div id="latest-draw" class="numbers-row"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Predictions (Ensemble) - MOVED DOWN -->
+                <!-- Main Predictions -->
                 <div class="card card-main">
                     <div class="card-header-flex">
                         <div class="card-title">🎯 앙상블 추천 조합</div>
@@ -511,11 +266,73 @@
                     <div id="prediction-sets" class="prediction-sets"></div>
                 </div>
 
-                <!-- Engines -->
-                <div class="card card-full">
-                    <div class="card-title">⚙️ 예측 엔진별 상세 분석</div>
-                    <div id="engine-grid" class="engine-grid"></div>
+                <!-- Analysis Status / Stats -->
+                <div class="card card-side">
+                    <div class="card-title">📂 최근 추첨 결과</div>
+                    <div id="system-insights" class="insights-container">
+                        <div class="insight-item">
+                            <div class="insight-label">누적 추첨 회차</div>
+                            <div id="total-draws" class="insight-value">-</div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-label">최근 당첨 번호</div>
+                            <div id="latest-draw-container">
+                                <!-- JS: Latest draw balls will be injected here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- History Section -->
+    <section id="history-section" class="dashboard-section">
+        <div class="container">
+            <div class="section-header-premium">
+                <div class="section-tag">HISTORICAL ANALYSIS</div>
+                <h2>과거 회차 기록 분석</h2>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Historical Match Analysis -->
+                <div class="card card-full">
+                    <div class="card-header-flex" style="justify-content: center;">
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                            <div class="set-selector">
+                                <label for="round-selector">회차:</label>
+                                <select id="round-selector" onchange="window.searchRound()"
+                                    style="background: transparent; border: none; color: #fff; font-weight: 700; font-size: 0.9rem; outline: none; cursor: pointer;">
+                                    <option value="" disabled>회차</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="winning-numbers-display" class="winning-display-banner"
+                        style="margin-top: 1.5rem; text-align: center;">
+                        <!-- 실제 당첨번호 표시 영역 -->
+                    </div>
+                    <div id="match-summary-container" class="match-chart-container">
+                        <canvas id="matchAnalysisChart"></canvas>
+                    </div>
+                    <div class="match-analysis-table-container">
+                        <table class="match-table">
+                            <thead>
+                                <tr>
+                                    <th>순위</th>
+                                    <th>추천 조합 (당첨번호 대조)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="match-analysis-body">
+                                <!-- JS: Match results will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -527,7 +344,7 @@
         </div>
     </footer>
 
-    <script src="static/js/main.js?v=3.1" defer></script>
+    <script src="static/js/main.js?v=3.3"></script>
 </body>
 
 </html>
