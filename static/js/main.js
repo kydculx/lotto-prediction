@@ -7,11 +7,28 @@ const state = {
     isHistorical: false,
     winningNumbers: null,
     chart: null, // Frequency Chart
-    matchChart: null // Match Analysis Chart
+    matchChart: null, // Match Analysis Chart
+    searchTimeout: null // Real-time search debounce
 };
 
 // DOM Utility: Get element with error check
 const getEl = (id) => document.getElementById(id);
+
+/**
+ * 🎚️ 슬라이더 조작 시 실시간 인터랙션 (전역 스코프 보장)
+ */
+window.handleSliderInput = function(value) {
+    const display = getEl('round-display');
+    if (display) display.innerText = `${value}회`;
+    
+    const slider = getEl('round-selector');
+    if (slider) {
+        const min = parseInt(slider.min) || 1;
+        const max = parseInt(slider.max) || 1200;
+        const percent = ((value - min) / (max - min)) * 100;
+        slider.style.setProperty('--p', `${percent}%`);
+    }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     // Prevent auto-scroll and lock to top
@@ -64,12 +81,16 @@ async function fetchPredictionData(targetRound = null) {
 
         const response = await fetch(path);
         if (!response.ok) {
-            throw new Error(targetRound
-                ? `${targetRound}회차 데이터가 없습니다.`
-                : '최신 분석 데이터를 불러올 수 없습니다.');
+            // targetRound가 있는 경우(과거 데이터 조회) 에러를 던지지 않고 null 반환하여 호출 측에서 처리
+            if (targetRound) {
+                console.warn(`${targetRound}회차 데이터 파일이 없습니다.`);
+                return null;
+            }
+            throw new Error('최신 분석 데이터를 불러올 수 없습니다.');
         }
         return await response.json();
     } catch (error) {
+        if (targetRound) return null; // 과거 데이터 조회 시 에러는 null 반환
         handleFetchError(error, '분석 데이터');
         return null;
     }
@@ -97,18 +118,20 @@ async function fetchStats() {
             totalDrawsEl.innerText = `${data.total_draws.toLocaleString()}회`;
         }
 
-        // Populate Round Selector
-        const selector = getEl('round-selector');
-        if (selector) {
-            selector.innerHTML = '<option value="" disabled>회차</option>';
-            for (let i = data.total_draws; i >= 1; i--) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${i}회`;
-                selector.appendChild(option);
+        // Populate Round Slider
+        const slider = getEl('round-selector');
+        if (slider) {
+            slider.min = 1;
+            slider.max = data.total_draws;
+            slider.value = data.total_draws;
+            
+            const maxLabel = getEl('max-round-label');
+            if (maxLabel) maxLabel.innerText = `${data.total_draws}회`;
+            
+            // 초기 슬라이더 상태 업데이트
+            if (window.handleSliderInput) {
+                window.handleSliderInput(data.total_draws);
             }
-            // 최신 과거 회차를 기본값으로 설정
-            selector.value = data.total_draws;
         }
 
         renderBallRow('latest-draw-container', data.latest_draw);
@@ -338,8 +361,12 @@ function renderHistorySection(data) {
     }
 
     // 적중 대조 테이블 렌더링
-    // 검색된 회차의 예측 조합을 테이블에 사용해야 함
     state.historyPredictions = data.predicted_sets;
+    
+    // 차트 영역 복구
+    const chartContainer = getEl('match-summary-container');
+    if (chartContainer) chartContainer.style.display = 'block';
+    
     renderMatchAnalysis(data.predicted_sets);
 }
 
@@ -388,24 +415,70 @@ window.searchRound = async (shouldScroll = true) => {
 
     if (!roundNum) return;
 
-    getEl('loader').style.opacity = '1';
-    getEl('loader').style.visibility = 'visible';
-
-    state.isHistorical = true;
-    const data = await fetchPredictionData(roundNum);
-
-    if (data) {
-        renderHistorySection(data);
-        if (shouldScroll) {
-            getEl('history-section').scrollIntoView({ behavior: 'smooth' });
+    // 디바운스 처리 (실시간 드래그 시 부하 감소)
+    if (state.searchTimeout) clearTimeout(state.searchTimeout);
+    
+    state.searchTimeout = setTimeout(async () => {
+        // 로더 표시 (실시간일 때는 아주 살짝만 혹은 생략 가능하지만, 일단 유지)
+        const loader = getEl('loader');
+        if (shouldScroll && loader) {
+            loader.style.opacity = '1';
+            loader.style.visibility = 'visible';
         }
-    }
 
-    setTimeout(() => {
-        getEl('loader').style.opacity = '0';
-        setTimeout(() => getEl('loader').style.visibility = 'hidden', 800);
-    }, 500);
+        state.isHistorical = true;
+        const data = await fetchPredictionData(roundNum);
+
+        if (data) {
+            renderHistorySection(data);
+            if (shouldScroll) {
+                getEl('history-section').scrollIntoView({ behavior: 'smooth' });
+            }
+        } else {
+            // 데이터 부재 처리 (생략: 이전 구현 유지)
+            handleMissingData(roundNum);
+        }
+
+        if (shouldScroll && loader) {
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.visibility = 'hidden', 800);
+            }, 500);
+        }
+    }, shouldScroll ? 0 : 50); // 드래그 중일 때는 50ms 대기, 클릭 시에는 즉시 실행
 };
+
+/**
+ * ❌ 데이터 부재 시 UI 처리 분리
+ */
+function handleMissingData(roundNum) {
+    const tableBody = getEl('match-analysis-body');
+    const chartContainer = getEl('match-summary-container');
+    const winningDisplay = getEl('winning-numbers-display');
+    
+    if (winningDisplay) winningDisplay.innerHTML = '';
+    if (tableBody) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="2" style="padding: 5rem 2rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+                        데이터를 찾을 수 없습니다
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        ${roundNum}회차의 상세 분석 데이터가 아카이브에 존재하지 않습니다.<br>
+                        다른 회차를 선택해 주세요.
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+    if (state.matchChart) {
+        state.matchChart.destroy();
+        state.matchChart = null;
+    }
+    if (chartContainer) chartContainer.style.display = 'none';
+}
 
 /**
  * 🔍 상세 적중 대조 렌더링 함수

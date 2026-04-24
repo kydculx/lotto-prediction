@@ -106,6 +106,22 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
     
     # 초기 가중치 설정
     result_path = Path(__file__).parent / "trained_weights_1000.json"
+    # 초기 가중치 설정 (최신 12대 엔진 라인업)
+    default_base_weights = {
+        'statistical': 0.1600,
+        'ml': 0.1000,
+        'lstm': 0.1000,
+        'sequence_correlation': 0.1000,
+        'timeseries': 0.0900,
+        'advanced_pattern': 0.0900,
+        'pattern': 0.0800,
+        'gap': 0.0800,
+        'graph': 0.0800,
+        'poisson': 0.0600,
+        'fourier': 0.0500,
+        'numerology': 0.0100,
+    }
+
     if result_path.exists():
         try:
             with open(result_path, 'r') as f:
@@ -113,37 +129,18 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
             base_weights = data['weights']
             best_score = data.get('best_score', 0)
             print(f"🔄 기존 학습 결과 로드 완료 (역대 최고 점수: {best_score:.4f})")
+            
+            # 혹시 기존 파일에 누락된 엔진이 있다면 기본값으로 채워줌
+            for key in default_base_weights:
+                if key not in base_weights:
+                    base_weights[key] = default_base_weights[key]
         except Exception as e:
             print(f"⚠️ 기존 학습 파일 로드 실패, 기본값으로 시작합니다: {e}")
-            base_weights = {
-                'statistical': 0.1600,
-                'lstm': 0.1200,
-                'sequence_correlation': 0.1200,
-                'timeseries': 0.1000,
-                'advanced_pattern': 0.1000,
-                'pattern': 0.0800,
-                'gap': 0.0800,
-                'graph': 0.0800,
-                'poisson': 0.0800,    # 신규 분석기 추가
-                'fourier': 0.0800,    # 신규 분석기 추가
-            }
+            base_weights = default_base_weights.copy()
             best_score = 0
     else:
         print("💡 신규 학습을 시작합니다 (기본 가중치 사용)")
-        base_weights = {
-            'statistical': 0.1600,
-            'ml': 0.1000,
-            'lstm': 0.1000,
-            'sequence_correlation': 0.1000,
-            'timeseries': 0.0900,
-            'advanced_pattern': 0.0900,
-            'pattern': 0.0800,
-            'gap': 0.0800,
-            'graph': 0.0800,
-            'poisson': 0.0600,
-            'fourier': 0.0500,
-            'numerology': 0.0100,
-        }
+        base_weights = default_base_weights.copy()
         best_score = 0
     
     # 초기 개체군 생성

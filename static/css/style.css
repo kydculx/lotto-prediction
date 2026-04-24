@@ -116,9 +116,17 @@ body {
 /* --- Layout Sections --- */
 
 .container {
-    max-width: 1280px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 0 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+.container-full {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 4vw;
     position: relative;
     z-index: 10;
 }
@@ -895,8 +903,8 @@ h1 {
 }
 
 .match-chart-container {
-    height: 300px;
-    max-width: 1000px;
+    height: 350px;
+    width: 100%;
     margin: 1.5rem auto 2.5rem auto;
     padding: 1.5rem;
     background: rgba(15, 23, 42, 0.3);
@@ -933,4 +941,106 @@ h1 {
     color: var(--text-secondary);
     font-size: 0.9rem;
     line-height: 1.6;
+}
+/* 회차 선택 슬라이더 UI */
+.round-slider-container {
+    width: 100%;
+    margin: 1rem auto 2rem auto;
+    padding: 1.5rem clamp(1rem, 3vw, 2.5rem);
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--card-border);
+    border-radius: 1.5rem;
+    backdrop-filter: blur(15px);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+}
+
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.slider-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.round-number-badge {
+    background: linear-gradient(135deg, var(--accent-color), #c084fc);
+    color: #fff;
+    padding: 0.3rem 1rem;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    min-width: 80px;
+    text-align: center;
+}
+
+.progress-slider-wrapper {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.premium-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    outline: none;
+    z-index: 5;
+    cursor: pointer;
+    background: transparent;
+}
+
+.premium-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, var(--accent-color) 0%, #c084fc var(--p), rgba(255, 255, 255, 0.05) var(--p));
+    border-radius: 10px;
+}
+
+.premium-slider::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, var(--accent-color) 0%, #c084fc var(--p), rgba(255, 255, 255, 0.05) var(--p));
+    border-radius: 10px;
+}
+
+.premium-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border: 4px solid var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 15px var(--accent-glow);
+    transition: all 0.2s ease;
+    margin-top: -8px; /* Track centering */
+}
+
+.premium-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 25px var(--accent-glow);
+}
+
+/* 기존 slider-track-fill 스타일 제거 */
+
+.slider-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.8rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
 }

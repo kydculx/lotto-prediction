@@ -5,22 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로또 AI | 프리미엄 분석 대시보드</title>
-    <link rel="stylesheet" href="static/css/style.css?v=3.3">
+    <link rel="stylesheet" href="static/css/style.css?v=3.4">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-            margin-top: 1rem;
-        }
-
-        @media (max-width: 768px) {
-            .chart-container {
-                height: 250px;
+    <script>
+        // 메인 JS 로드 전 슬라이더 기본 동작 보장
+        window.handleSliderInput = function(value) {
+            const display = document.getElementById('round-display');
+            if (display) display.innerText = `${value}회`;
+            
+            const slider = document.getElementById('round-selector');
+            if (slider) {
+                const min = parseInt(slider.min) || 1;
+                const max = parseInt(slider.max) || 1200;
+                const percent = ((value - min) / (max - min)) * 100;
+                slider.style.setProperty('--p', `${percent}%`);
             }
-        }
-    </style>
+        };
+    </script>
 </head>
 
 <body>
@@ -290,7 +291,7 @@
 
     <!-- History Section -->
     <section id="history-section" class="dashboard-section">
-        <div class="container">
+        <div class="container-full">
             <div class="section-header-premium">
                 <div class="section-tag">HISTORICAL ANALYSIS</div>
                 <h2>과거 회차 기록 분석</h2>
@@ -299,15 +300,18 @@
             <div class="dashboard-grid">
                 <!-- Historical Match Analysis -->
                 <div class="card card-full">
-                    <div class="card-header-flex" style="justify-content: center;">
-                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-                            <div class="set-selector">
-                                <label for="round-selector">회차:</label>
-                                <select id="round-selector" onchange="window.searchRound()"
-                                    style="background: transparent; border: none; color: #fff; font-weight: 700; font-size: 0.9rem; outline: none; cursor: pointer;">
-                                    <option value="" disabled>회차</option>
-                                </select>
-                            </div>
+                    <div class="round-slider-container">
+                        <div class="slider-header" style="justify-content: center;">
+                            <span id="round-display" class="round-number-badge">-회</span>
+                        </div>
+                        <div class="progress-slider-wrapper">
+                            <input type="range" id="round-selector" class="premium-slider" min="1" max="1200" step="1" 
+                                style="--p: 100%;"
+                                oninput="window.handleSliderInput(this.value); window.searchRound(false)">
+                        </div>
+                        <div class="slider-footer">
+                            <span>1회</span>
+                            <span id="max-round-label">-회</span>
                         </div>
                     </div>
                     
@@ -344,7 +348,7 @@
         </div>
     </footer>
 
-    <script src="static/js/main.js?v=3.3"></script>
+    <script src="static/js/main.js?v=3.8"></script>
 </body>
 
 </html>
