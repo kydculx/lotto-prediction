@@ -9,10 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // 메인 JS 로드 전 슬라이더 기본 동작 보장
-        window.handleSliderInput = function(value) {
+        window.handleSliderInput = function (value) {
             const display = document.getElementById('round-display');
             if (display) display.innerText = `${value}회`;
-            
+
             const slider = document.getElementById('round-selector');
             if (slider) {
                 const min = parseInt(slider.min) || 1;
@@ -305,38 +305,29 @@
                             <span id="round-display" class="round-number-badge">-회</span>
                         </div>
                         <div class="progress-slider-wrapper">
-                            <input type="range" id="round-selector" class="premium-slider" min="1" max="1200" step="1" 
+                            <input type="range" id="round-selector" class="premium-slider" min="2" max="1200" step="1"
                                 style="--p: 100%;"
                                 oninput="window.handleSliderInput(this.value); window.searchRound(false)">
                         </div>
                         <div class="slider-footer">
-                            <span>1회</span>
+                            <span>2회</span>
                             <span id="max-round-label">-회</span>
                         </div>
                     </div>
-                    
+
                     <div id="winning-numbers-display" class="winning-display-banner"
                         style="margin-top: 1.5rem; text-align: center;">
                         <!-- 실제 당첨번호 표시 영역 -->
                     </div>
-                    <div id="match-summary-container" class="match-chart-container">
-                        <canvas id="matchAnalysisChart"></canvas>
-                    </div>
-                    <div class="match-canvas-container">
-                        <div class="card-title" style="margin-bottom: 1.5rem; text-align: center;">📈 과거 예측 적중 대조</div>
-                        <div class="table-responsive">
-                            <table class="match-table">
-                                <thead>
-                                    <tr>
-                                        <th>순위</th>
-                                        <th>추천 조합 (당첨번호 대조)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="match-analysis-body">
-                                    <!-- JS: Match results injected here -->
-                                </tbody>
-                            </table>
+                    <div id="match-summary-container" class="match-canvas-container"
+                        style="display: none; margin-bottom: 2rem;">
+                        <div class="card-title">📊 분석 적중 통계</div>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="matchAnalysisChart"></canvas>
                         </div>
+                    </div>
+                    <div id="match-results-list" class="match-results-list">
+                        <!-- JS: Match cards will be injected here -->
                     </div>
                 </div>
             </div>

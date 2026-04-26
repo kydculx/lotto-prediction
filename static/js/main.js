@@ -57,7 +57,11 @@ async function initApp() {
 
                 // 하단 섹션에 최신 과거 회차 데이터 기본 로드
                 const selector = getEl('round-selector');
-                if (selector && selector.value) {
+                if (selector) {
+                    const maxRound = state.allResults.length > 0 ? state.allResults[state.allResults.length - 1].round : 1221;
+                    selector.max = maxRound;
+                    selector.value = maxRound;
+                    if (window.handleSliderInput) window.handleSliderInput(maxRound);
                     await window.searchRound(false); // 초기 로드 시에는 스크롤하지 않음
                 }
 
@@ -81,12 +85,8 @@ async function fetchPredictionData(targetRound = null) {
 
         const response = await fetch(path);
         if (!response.ok) {
-            // targetRound가 있는 경우(과거 데이터 조회) 에러를 던지지 않고 null 반환하여 호출 측에서 처리
-            if (targetRound) {
-                console.warn(`${targetRound}회차 데이터 파일이 없습니다.`);
-                return null;
-            }
-            throw new Error('최신 분석 데이터를 불러올 수 없습니다.');
+            // 과거 데이터 조회 시 파일이 없어도 콘솔 경고 없이 null 반환 (handleMissingData에서 처리)
+            return null;
         }
         return await response.json();
     } catch (error) {
@@ -121,7 +121,7 @@ async function fetchStats() {
         // Populate Round Slider
         const slider = getEl('round-selector');
         if (slider) {
-            slider.min = 1;
+            slider.min = 2;
             slider.max = data.total_draws;
             slider.value = data.total_draws;
             
@@ -452,25 +452,22 @@ window.searchRound = async (shouldScroll = true) => {
  * ❌ 데이터 부재 시 UI 처리 분리
  */
 function handleMissingData(roundNum) {
-    const tableBody = getEl('match-analysis-body');
+    const listContainer = getEl('match-results-list');
     const chartContainer = getEl('match-summary-container');
     const winningDisplay = getEl('winning-numbers-display');
     
     if (winningDisplay) winningDisplay.innerHTML = '';
-    if (tableBody) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="2" style="padding: 5rem 2rem; text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
-                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
-                        데이터를 찾을 수 없습니다
-                    </div>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                        ${roundNum}회차의 상세 분석 데이터가 아카이브에 존재하지 않습니다.<br>
-                        다른 회차를 선택해 주세요.
-                    </div>
-                </td>
-            </tr>
+    if (listContainer) {
+        listContainer.innerHTML = `
+            <div style="padding: 3rem; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+                    데이터를 찾을 수 없습니다
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                    ${roundNum}회차의 상세 분석 데이터가 아카이브에 존재하지 않습니다.
+                </div>
+            </div>
         `;
     }
     if (state.matchChart) {
@@ -484,63 +481,52 @@ function handleMissingData(roundNum) {
  * 🔍 상세 적중 대조 렌더링 함수
  */
 function renderMatchAnalysis(sets = null) {
-    const tableBody = getEl('match-analysis-body');
-    const chartCtx = getEl('matchAnalysisChart');
-
-    if (!tableBody) return;
+    const listContainer = getEl('match-results-list');
+    if (!listContainer) return;
 
     const targetSets = sets || state.historyPredictions || state.allPredictions || [];
 
     if (!state.winningNumbers || state.winningNumbers.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="2" style="padding: 3rem; color: #64748b;">당첨 번호 정보가 없습니다.</td></tr>`;
-        if (state.matchChart) state.matchChart.destroy();
+        listContainer.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">당첨 정보가 없습니다.</div>`;
         return;
     }
 
     const winningNums = state.winningNumbers;
-    
-    // 적중 통계 계산 (0~6개)
     const stats = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     
     const processedSets = targetSets.map(set => {
         const hitCount = set.numbers.filter(n => winningNums.includes(n)).length;
         if (hitCount <= 6) stats[hitCount]++;
-        return {
-            set: set.numbers,
-            hitCount: hitCount
-        };
+        return { set: set.numbers, hitCount: hitCount };
     });
 
-    // 차트 렌더링
     renderMatchAnalysisChart(stats);
 
-    const minHit = 3; // 목록에는 3개 이상만 노출
     const matchedSets = processedSets
-        .filter(item => item.hitCount >= minHit)
+        .filter(item => item.hitCount >= 3)
         .sort((a, b) => b.hitCount - a.hitCount);
 
-    tableBody.innerHTML = '';
+    listContainer.innerHTML = '';
 
     if (matchedSets.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="2" style="padding: 3rem; color: #64748b;">3개 이상 적중된 조합이 없습니다.</td></tr>`;
+        listContainer.innerHTML = `<div style="padding: 3rem; text-align: center; color: var(--text-secondary);">3개 이상 적중된 내역이 없습니다.</div>`;
         return;
     }
 
     matchedSets.forEach(item => {
-        const tr = document.createElement('tr');
-        const isSecondRank = item.hitCount === 5 && item.set.includes(state.bonusNumber);
-        tr.innerHTML = `
-            <td>${getRank(item.hitCount, isSecondRank)}</td>
-            <td>
-                <div class="match-row-numbers">
-                    ${item.set.map(n => {
+        const row = document.createElement('div');
+        row.className = 'match-result-row';
+        
+        const numbersHtml = item.set.map(n => {
             const isMatched = winningNums.includes(n);
-            return createBall(n, isMatched ? '' : 'num-grayscale');
-        }).join('')}
-                </div>
-            </td>
+            const ballColorClass = getNumberColorClass(n);
+            return `<span class="history-ball ${ballColorClass} ${isMatched ? 'hit' : 'miss'}">${n}</span>`;
+        }).join('');
+
+        row.innerHTML = `
+            <div class="match-numbers-balls">${numbersHtml}</div>
         `;
-        tableBody.appendChild(tr);
+        listContainer.appendChild(row);
     });
 }
 

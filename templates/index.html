@@ -294,14 +294,19 @@
                 <!-- Search & Reset Control -->
                 <div class="card card-full">
                     <div class="card-title">🔍 과거 회차 조회</div>
-                    <div class="search-container" style="display: flex; gap: 1rem; align-items: center; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
-                        <div class="set-selector" style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); padding: 0.5rem 1.2rem; border-radius: 12px;">
-                            <label for="round-selector" style="margin-right: 0.8rem; font-weight: 600; color: var(--text-secondary);">회차 선택:</label>
-                            <select id="round-selector" onchange="window.searchRound()" style="background: transparent; border: none; color: #fff; font-weight: 800; font-size: 1rem; outline: none;">
-                                <option value="" disabled selected>회차 선택</option>
+                    <div class="search-container"
+                        style="display: flex; gap: 1rem; align-items: center; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+                        <div class="set-selector"
+                            style="background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); padding: 0.5rem 1.2rem; border-radius: 12px;">
+                            <label for="round-selector"
+                                style="margin-right: 0.8rem; font-weight: 600; color: var(--text-secondary);">회차
+                                선택:</label>
+                            <select id="round-selector" onchange="window.searchRound()"
+                                style="background: transparent; border: none; color: #fff; font-weight: 800; font-size: 1rem; outline: none;">
+                                <option value="" disabled selected>회차 선택 (2회~)</option>
                             </select>
                         </div>
-                        <button id="reset-button" onclick="window.resetToLatest()" 
+                        <button id="reset-button" onclick="window.resetToLatest()"
                             style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%); border: 1px solid rgba(99, 102, 241, 0.3); color: #fff; padding: 0.7rem 1.5rem; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
                             최신 분석으로 복귀
                         </button>
@@ -311,21 +316,19 @@
                 <!-- Historical Match Analysis -->
                 <div class="card card-full">
                     <div class="card-title" id="history-title">📈 과거 예측 적중 대조</div>
-                    <div id="winning-numbers-display" class="winning-display-banner" style="margin-top: 1.5rem; text-align: center;">
+                    <div id="winning-numbers-display" class="winning-display-banner"
+                        style="margin-top: 1.5rem; text-align: center;">
                         <!-- 실제 당첨번호 표시 영역 -->
                     </div>
-                    <div class="match-analysis-table-container">
-                        <table class="match-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">순위</th>
-                                    <th>추천 조합 (당첨번호 대조)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="match-analysis-body">
-                                <!-- JS: Match results will be injected here -->
-                            </tbody>
-                        </table>
+                    <div id="match-summary-container" class="match-canvas-container"
+                        style="display: none; margin-bottom: 2rem;">
+                        <div class="card-title">📊 분석 적중 통계</div>
+                        <div class="chart-container" style="height: 200px;">
+                            <canvas id="matchAnalysisChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="match-results-list" class="match-results-list">
+                        <!-- JS: Match cards will be injected here -->
                     </div>
                 </div>
             </div>

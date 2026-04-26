@@ -851,97 +851,164 @@ h1 {
     -webkit-text-fill-color: transparent;
 }
 
-.match-analysis-table-container {
-    margin: 1.5rem auto;
-    overflow-x: auto;
-    border-radius: 1.25rem;
-    border: 1px solid var(--card-border);
-    background: rgba(15, 23, 42, 0.2);
-    max-width: 1000px;
-}
-
-.match-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-
-.match-table th {
-    background: rgba(255,255,255,0.05);
-    padding: 1rem;
-    text-align: center;
-    color: var(--text-secondary);
-    font-weight: 600;
-    border-bottom: 1px solid var(--card-border);
-}
-
-/* Historical Match Analysis Canvas */
-.match-canvas-container {
-    margin-top: 2rem;
-    padding: 2rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 1.5rem;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
-}
-
-.table-responsive {
-    overflow-x: auto;
-    border-radius: 1rem;
-}
-
-.match-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.95rem;
-}
-
-.match-table th {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 1.2rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-    text-align: center;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.match-table td {
-    padding: 1.5rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    vertical-align: middle;
-}
-
-.match-row-numbers {
+/* --- Historical Match List (Simple) --- */
+.match-results-list {
     display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    margin: 1.5rem auto;
+    max-width: 800px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.match-result-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background 0.2s ease;
+}
+
+.match-result-row:last-child {
+    border-bottom: none;
+}
+
+.match-result-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.match-rank-badge {
+    min-width: 80px;
 }
 
 .rank-badge {
-    display: inline-block;
-    padding: 0.4rem 0.8rem;
-    border-radius: 0.5rem;
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-align: center;
-    min-width: 3.5rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    white-space: nowrap;
 }
 
-.rank-1 { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
-.rank-2 { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); color: #000; }
-.rank-3 { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; }
-.rank-4 { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); }
-.rank-5 { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); }
+.rank-1 { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #000; box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
+.rank-2 { background: #e2e8f0; color: #000; }
+.rank-3 { background: #f97316; color: #fff; }
+.rank-4 { background: #6366f1; color: #fff; }
+.rank-5 { background: #3b82f6; color: #fff; }
 
-.num-grayscale {
-    filter: grayscale(1) opacity(0.3);
-    transform: scale(0.9);
+.match-numbers-balls {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+.history-ball {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3), 2px 2px 5px rgba(0,0,0,0.2);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.history-ball.miss {
+    background: radial-gradient(circle at 30% 30%, #4b5563, #1f2937) !important;
+    box-shadow: none !important;
+    opacity: 0.25;
+    filter: grayscale(100%) brightness(0.6);
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.history-ball.hit {
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.match-result-row {
+    padding: 0.75rem 1rem;
+    justify-content: center;
+}
+
+@media (max-width: 400px) {
+    .history-ball {
+        width: 1.8rem;
+        height: 1.8rem;
+        font-size: 0.75rem;
+    }
+    .match-numbers-balls {
+        gap: 0.35rem;
+    }
+}
+
+.match-numbers-minimal {
+    display: flex;
+    gap: 0.75rem;
+    flex: 1;
+    justify-content: center;
+}
+
+.min-num {
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.45);
+    transition: all 0.3s;
+}
+
+.min-num.hit {
+    color: #34d399; /* 민트/에메랄드 계열로 가독성 및 세련미 강화 */
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+    transform: scale(1.1);
+}
+
+.match-hit-summary {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-width: 100px;
+    text-align: right;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .match-result-row {
+        padding: 0.8rem 0.75rem;
+    }
+    
+    .match-numbers-minimal {
+        gap: 0.4rem;
+    }
+
+    .min-num {
+        font-size: 0.9rem;
+    }
+
+    .match-hit-summary {
+        min-width: 70px;
+        font-size: 0.75rem;
+    }
+}
+
+.winning-display-banner {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 1.25rem;
+    margin: 1.5rem auto 2.5rem auto;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    max-width: 800px;
 }
 
 .match-chart-container {
-    height: 350px;
+    height: 280px;
     width: 100%;
     margin: 1.5rem auto 2.5rem auto;
     padding: 1.5rem;
