@@ -307,7 +307,7 @@ body {
 
 /* Dashboard Section */
 .dashboard-section {
-    padding: clamp(4rem, 12vw, 10rem) 0;
+    padding: 4rem 0;
 }
 
 header {
@@ -367,13 +367,16 @@ h1 {
     .card-main {
         grid-column: span 8;
     }
+
     .card-side {
         grid-column: span 4;
     }
 }
 
 @media (max-width: 1199px) {
-    .card-main, .card-side {
+
+    .card-main,
+    .card-side {
         grid-column: span 12;
     }
 }
@@ -594,7 +597,7 @@ h1 {
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
-    
+
     .prediction-card {
         padding: 1rem;
         gap: 0.75rem;
@@ -856,7 +859,8 @@ h1 {
     display: flex;
     flex-direction: column;
     margin: 1.5rem auto;
-    max-width: 800px;
+    width: 100%;
+    max-width: 100%;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 1rem;
     overflow: hidden;
@@ -891,11 +895,31 @@ h1 {
     white-space: nowrap;
 }
 
-.rank-1 { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #000; box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
-.rank-2 { background: #e2e8f0; color: #000; }
-.rank-3 { background: #f97316; color: #fff; }
-.rank-4 { background: #6366f1; color: #fff; }
-.rank-5 { background: #3b82f6; color: #fff; }
+.rank-1 {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #000;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+}
+
+.rank-2 {
+    background: #e2e8f0;
+    color: #000;
+}
+
+.rank-3 {
+    background: #f97316;
+    color: #fff;
+}
+
+.rank-4 {
+    background: #6366f1;
+    color: #fff;
+}
+
+.rank-5 {
+    background: #3b82f6;
+    color: #fff;
+}
 
 .match-numbers-balls {
     display: flex;
@@ -915,7 +939,7 @@ h1 {
     font-size: 0.9rem;
     font-weight: 800;
     color: #fff;
-    box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3), 2px 2px 5px rgba(0,0,0,0.2);
+    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.3), 2px 2px 5px rgba(0, 0, 0, 0.2);
     position: relative;
     transition: all 0.3s ease;
 }
@@ -944,6 +968,7 @@ h1 {
         height: 1.8rem;
         font-size: 0.75rem;
     }
+
     .match-numbers-balls {
         gap: 0.35rem;
     }
@@ -964,7 +989,8 @@ h1 {
 }
 
 .min-num.hit {
-    color: #34d399; /* 민트/에메랄드 계열로 가독성 및 세련미 강화 */
+    color: #34d399;
+    /* 민트/에메랄드 계열로 가독성 및 세련미 강화 */
     font-weight: 800;
     text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
     transform: scale(1.1);
@@ -982,7 +1008,7 @@ h1 {
     .match-result-row {
         padding: 0.8rem 0.75rem;
     }
-    
+
     .match-numbers-minimal {
         gap: 0.4rem;
     }
@@ -998,13 +1024,14 @@ h1 {
 }
 
 .winning-display-banner {
-    padding: 1.5rem;
+    padding: 1.0rem;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 1.25rem;
     margin: 1.5rem auto 2.5rem auto;
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    max-width: 800px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .match-chart-container {
@@ -1047,6 +1074,7 @@ h1 {
     font-size: 0.9rem;
     line-height: 1.6;
 }
+
 /* 회차 선택 슬라이더 UI */
 .round-slider-container {
     width: 100%;
@@ -1131,7 +1159,8 @@ h1 {
     cursor: pointer;
     box-shadow: 0 0 15px var(--accent-glow);
     transition: all 0.2s ease;
-    margin-top: -8px; /* Track centering */
+    margin-top: -8px;
+    /* Track centering */
 }
 
 .premium-slider::-webkit-slider-thumb:hover {
@@ -1148,4 +1177,91 @@ h1 {
     font-size: 0.75rem;
     color: var(--text-secondary);
     font-weight: 600;
+}
+
+/* 회차 네비게이션 버튼 프리미엄 재디자인 */
+.round-nav-btns {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.btn-round-nav {
+    position: relative;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    padding: 0.8rem 1.8rem;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.btn-round-nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.05),
+            transparent);
+    transition: 0.5s;
+}
+
+.btn-round-nav svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+/* 이전회차 버튼 특화 */
+.btn-round-nav:first-child:hover svg {
+    transform: translateX(-5px);
+}
+
+/* 다음회차 버튼 특화 */
+.btn-round-nav:last-child:hover svg {
+    transform: translateX(5px);
+}
+
+.btn-round-nav:hover {
+    color: #fff;
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.5);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        0 10px 25px -5px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+.btn-round-nav:hover::before {
+    left: 100%;
+}
+
+.btn-round-nav:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* 강조용 네온 도트 */
+.btn-round-nav::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-color);
+    opacity: 0.5;
 }

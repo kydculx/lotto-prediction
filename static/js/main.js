@@ -134,7 +134,10 @@ async function fetchStats() {
             }
         }
 
-        renderBallRow('latest-draw-container', data.latest_draw);
+        const latestDrawEl = getEl('latest-draw-container');
+        if (latestDrawEl) {
+            renderBallRow('latest-draw-container', data.latest_draw);
+        }
 
         // Fetch frequency data and init chart
         const freqResponse = await fetch(`./data/frequencies.json?t=${timestamp}`);
@@ -296,10 +299,14 @@ function renderPredictionSection(data) {
         roundHeader.innerText = `${data.next_round}회차 예측 분석`;
     }
 
-    // 핫/콜드/오버듀 넘버
-    renderBallRow('hot-numbers', data.hot_cold.hot.slice(0, 6).map(n => n[0]));
-    renderBallRow('cold-numbers', data.hot_cold.cold.slice(0, 6).map(n => n[0]));
-    renderBallRow('overdue-numbers', data.hot_cold.overdue.slice(0, 5).map(n => n[0]));
+    // 핫/콜드/오버듀 넘버 (요소가 있을 경우에만 렌더링)
+    const hotEl = getEl('hot-numbers');
+    const coldEl = getEl('cold-numbers');
+    const overdueEl = getEl('overdue-numbers');
+    
+    if (hotEl) renderBallRow('hot-numbers', data.hot_cold.hot.slice(0, 6).map(n => n[0]));
+    if (coldEl) renderBallRow('cold-numbers', data.hot_cold.cold.slice(0, 6).map(n => n[0]));
+    if (overdueEl) renderBallRow('overdue-numbers', data.hot_cold.overdue.slice(0, 5).map(n => n[0]));
 
     // 차트 업데이트
     updateChart(data.hot_cold.frequencies);
@@ -707,3 +714,28 @@ function renderMatchAnalysisChart(stats) {
         }
     });
 }
+
+/**
+ * ⏺️ 회차 개별 이동 (이전/다음 버튼)
+ */
+window.moveRound = (offset) => {
+    const slider = getEl('round-selector');
+    if (!slider) return;
+
+    const current = parseInt(slider.value);
+    const min = parseInt(slider.min);
+    const max = parseInt(slider.max);
+    
+    let next = current + offset;
+    
+    // 범위 제한
+    if (next < min) next = min;
+    if (next > max) next = max;
+    
+    if (next !== current) {
+        slider.value = next;
+        // 슬라이더 인풋 이벤트 수동 트리거 및 데이터 검색
+        window.handleSliderInput(next);
+        window.searchRound(false); // 버튼 클릭 시에는 자동 스크롤하지 않음
+    }
+};
