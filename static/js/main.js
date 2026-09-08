@@ -501,10 +501,10 @@ function renderMatchAnalysis(sets = null) {
     const winningNums = state.winningNumbers;
     const stats = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     
-    const processedSets = targetSets.map(set => {
+    const processedSets = targetSets.map((set, idx) => {
         const hitCount = set.numbers.filter(n => winningNums.includes(n)).length;
         if (hitCount <= 6) stats[hitCount]++;
-        return { set: set.numbers, hitCount: hitCount };
+        return { set: set.numbers, hitCount: hitCount, originalIndex: idx };
     });
 
     renderMatchAnalysisChart(stats);
@@ -523,7 +523,7 @@ function renderMatchAnalysis(sets = null) {
     matchedSets.forEach(item => {
         const row = document.createElement('div');
         row.className = 'match-result-row';
-        
+
         const numbersHtml = item.set.map(n => {
             const isMatched = winningNums.includes(n);
             const ballColorClass = getNumberColorClass(n);
@@ -531,6 +531,7 @@ function renderMatchAnalysis(sets = null) {
         }).join('');
 
         row.innerHTML = `
+            <div class="match-set-badge">${item.originalIndex + 1}</div>
             <div class="match-numbers-balls">${numbersHtml}</div>
         `;
         listContainer.appendChild(row);

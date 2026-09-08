@@ -38,7 +38,7 @@ class WeightOptimizer:
                 weight = weights.get(name, 0)
                 for num, score in scores.items():
                     ensemble[num] += score * weight
-            except:
+            except Exception:
                 pass
         
         max_score = max(ensemble.values()) if ensemble.values() else 1

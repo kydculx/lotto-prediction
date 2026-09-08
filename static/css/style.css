@@ -873,6 +873,7 @@ h1 {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     transition: background 0.2s ease;
+    gap: 1rem;
 }
 
 .match-result-row:last-child {
@@ -881,6 +882,20 @@ h1 {
 
 .match-result-row:hover {
     background: rgba(255, 255, 255, 0.04);
+}
+
+.match-set-badge {
+    min-width: 36px;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    text-align: center;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .match-rank-badge {

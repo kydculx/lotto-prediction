@@ -4,7 +4,7 @@
 """
 
 import numpy as np
-import math
+from math import exp, log, lgamma
 from typing import Dict, List
 from .base import BaseEngine
 
@@ -14,17 +14,26 @@ class PoissonEngine(BaseEngine):
     
     def __init__(self, numbers_matrix: np.ndarray):
         super().__init__(numbers_matrix)
-        
-    def _poisson_pmf(self, k: int, mu: float) -> float:
-        """포아송 확률 질량 함수 (Probability Mass Function)"""
-        try:
-            return (mu ** k * math.exp(-mu)) / math.factorial(k)
-        except (OverflowError, ValueError):
-            return 0.0
 
     def _poisson_cdf(self, k: int, mu: float) -> float:
-        """포아송 누적 분포 함수 (Cumulative Distribution Function)"""
-        return sum(self._poisson_pmf(i, mu) for i in range(k + 1))
+        """포아송 누적 분포 — log-gamma로 수치 안정성 확보"""
+        if mu <= 0:
+            return 0.0
+        # log(P(X=i)) = i*log(mu) - mu - log(i!)
+        # CDF = sum(P(X=i) for i in 0..k), 누적 합산은 별도 PMF 호출 없이
+        # 직접 구현보다 정규화된 gamma 불완전 함수를 사용하는 것이 안정적이나,
+        # mu가 작고 k가 작은 범위(<50)이므로 log-gamma로 계산된 PMF를 누적
+        pmf = 0.0
+        cdf = 0.0
+        log_mu = log(mu)
+        for i in range(k + 1):
+            if i == 0:
+                pmf = exp(-mu)
+            else:
+                # PMF 재귀: P(X=i) = P(X=i-1) * mu / i (수치적으로 안정)
+                pmf = pmf * mu / i
+            cdf += pmf
+        return min(cdf, 1.0)
 
     def get_scores(self) -> Dict[int, float]:
         """포아송 기반 반등 가능성 점수 계산"""

@@ -168,7 +168,7 @@ class LottoDataLoader:
             self.load()
         return int(self.df['round'].max())
     
-    def get_draw_by_round(self, round_num: int) -> List[int]:
+    def get_draw_by_round(self, round_num: int) -> List[int] | None:
         """특정 회차의 당첨번호 반환"""
         self.check_for_updates()
         if self.df is None:

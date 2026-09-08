@@ -68,5 +68,5 @@ def frequencies():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Mac에서 5000번 포트는 AirPlay와 충돌할 수 있어 5001번을 권장합니다.
-    app.run(host='0.0.0.0', port=8002, debug=True)
+    # Mac에서 5000번 포트는 AirPlay와 충돌할 수 있어 8002번을 사용합니다.
+    app.run(host='0.0.0.0', port=8002, debug=False)

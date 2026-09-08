@@ -47,9 +47,9 @@ def apply_trained_weights():
         weights_str += f"        '{name}': {weight:.4f},\n"
     weights_str += "    }"
     
-    # 정규식으로 교체
-    pattern = r"    # 최적화된 엔진 가중치.*?DEFAULT_WEIGHTS = \{[^}]+\}"
-    new_content = re.sub(pattern, weights_str, content, flags=re.DOTALL)
+    # 정규식으로 DEFAULT_WEIGHTS 블록 전체를 교체
+    pattern = r"(?s)    # 최적화된 엔진 가중치.*?DEFAULT_WEIGHTS = \{[^}]*\}"
+    new_content = re.sub(pattern, weights_str, content)
     
     # 백업 생성
     backup_path = predictor_path.with_suffix('.py.backup')

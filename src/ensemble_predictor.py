@@ -12,20 +12,20 @@ from itertools import combinations
 class EnsemblePredictor:
     """앙상블 예측기 v3.0"""
     
-    # 최적화된 엔진 가중치 (자동 최적화)
+    # 최적화된 엔진 가중치 (1~1000회차 유전 알고리즘 학습 결과)
     DEFAULT_WEIGHTS = {
-        'sequence_correlation': 0.2861,
-        'statistical': 0.1776,
-        'timeseries': 0.1582,
-        'ml': 0.1495,
-        'fourier': 0.0655,
-        'lstm': 0.0498,
-        'advanced_pattern': 0.0421,
-        'graph': 0.0343,
-        'numerology': 0.0251,
-        'pattern': 0.0084,
-        'gap': 0.0025,
-        'poisson': 0.0010,
+        'advanced_pattern': 0.2808,
+        'gap': 0.1970,
+        'numerology': 0.0848,
+        'poisson': 0.0785,
+        'statistical': 0.0619,
+        'ml': 0.0619,
+        'timeseries': 0.0590,
+        'sequence_correlation': 0.0590,
+        'graph': 0.0553,
+        'lstm': 0.0422,
+        'fourier': 0.0162,
+        'pattern': 0.0035,
     }
     
     # 엔진 클래스 캐시 (로드 1회만 수행)
@@ -53,9 +53,14 @@ class EnsemblePredictor:
         
         # 가중치 설정 (로드된 엔진 기준)
         self.base_weights = weights or self.DEFAULT_WEIGHTS.copy()
+        self._dynamic_boosts_computed = False
         
         if self.use_dynamic_weight:
-            self._calculate_dynamic_boosts()
+            # 지연 계산: _ensure_dynamic_boosts()가 필요 시 최초 1회 계산
+            self._dynamic_boosts_computed = False
+            self.dynamic_boosts = {k: 1.0 for k in self.engines}
+        else:
+            self.dynamic_boosts = {k: 1.0 for k in self.engines}
             
         self._normalize_weights()
         
@@ -102,6 +107,12 @@ class EnsemblePredictor:
             except Exception as e:
                 print(f"⚠️ 엔진 {engine_id} 초기화 실패: {e}")
 
+    def _ensure_dynamic_boosts(self):
+        if not self._dynamic_boosts_computed and self.use_dynamic_weight:
+            self._calculate_dynamic_boosts()
+            self._dynamic_boosts_computed = True
+            self._normalize_weights()
+
     def _calculate_dynamic_boosts(self):
         """최근 10회차 엔진별 성능을 기반으로 가중치 부스트 계산 (메타 러닝)"""
         lookback = 10
@@ -130,7 +141,7 @@ class EnsemblePredictor:
                     pred = set(temp_engine.predict())
                     hits = len(pred & actual)
                     performance[name] += hits
-                except:
+                except Exception:
                     continue
         
         # 부스트 계산 (평균 적중수 기반, 최소 0.8 ~ 최대 1.3)
@@ -203,6 +214,7 @@ class EnsemblePredictor:
     
     def get_ensemble_scores(self) -> Dict[int, float]:
         """가중 평균 앙상블 점수 + 투표 기반 부스트"""
+        self._ensure_dynamic_boosts()
         if not self.engine_scores:
             self.calculate_all_scores()
         if not self.engine_predictions:
@@ -270,7 +282,6 @@ class EnsemblePredictor:
                 sum_score = max(0, 1 - distance / 40)
             
             # 번호 점수 (30%)
-            scores_dict = dict(candidates)
             num_score = sum(scores_dict.get(n, 0) for n in combo) / n_numbers
             
             # 검증기 점수 (30%)

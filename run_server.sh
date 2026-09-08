@@ -27,8 +27,10 @@ export PYTHONPATH=$PYTHONPATH:.
 python3 src/export_results.py
 
 # 2. 정적 웹 서버 실행 (GitHub Pages 환경 시뮬레이션)
+#    Flask API가 필요하면 app.py를 대신 실행 (python3 app.py)
 echo ""
 echo "🌐 서버 실행 중: http://127.0.0.1:8002"
 echo "🌐 이 환경은 GitHub Pages와 동일한 정적 호스팅 방식입니다."
+echo "🌐 Flask API 서버는 'python3 app.py'로 실행 가능합니다."
 echo "------------------------------------------------"
 python3 -m http.server 8002

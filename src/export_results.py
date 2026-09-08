@@ -106,14 +106,14 @@ def export_results(target_round=None, round_range=None, force=False):
             # 신규 분석 수행
             if current_target:
                 logger.info(f"📍 {target_round_num}회차 시점 분석 중...")
-                loader.df = all_rounds_df[all_rounds_df['round'] <= target_round_num].copy()
-                loader.numbers_df = loader.df[['num1', 'num2', 'num3', 'num4', 'num5', 'num6']].copy()
+                # 로컬 복사본 사용 — loader의 check_for_updates()/load()가 df를 덮어쓰는 문제 방지
+                filtered_df = all_rounds_df[all_rounds_df['round'] <= target_round_num].copy()
+                numbers_df = filtered_df[['num1', 'num2', 'num3', 'num4', 'num5', 'num6']].copy()
+                matrix = numbers_df.values
             else:
                 logger.info("🚀 최신 회차 분석 중...")
-                loader.df = all_rounds_df.copy()
-                loader.numbers_df = loader.df[['num1', 'num2', 'num3', 'num4', 'num5', 'num6']].copy()
+                matrix = loader.get_numbers_matrix()
 
-            matrix = loader.get_numbers_matrix()
             if matrix is None or len(matrix) == 0:
                 logger.warning(f"{target_round_num}회차: 분석할 데이터가 부족하여 건너뜜")
                 continue
