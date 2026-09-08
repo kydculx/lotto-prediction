@@ -1,10 +1,10 @@
 {
   "training_rounds": "1-1000",
-  "best_score": 0.918,
+  "best_score": 0.92,
   "weights": {
-    "statistical": 0.05865419664616031,
+    "statistical": 0.056267772940110886,
     "ml": 0.02264364585070678,
-    "lstm": 0.21523353238059478,
+    "lstm": 0.2176199560866442,
     "sequence_correlation": 0.05157625746693535,
     "timeseries": 0.020780931074479467,
     "advanced_pattern": 0.22322453187083857,
