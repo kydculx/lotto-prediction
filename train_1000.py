@@ -162,8 +162,11 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
     cache = OptimizationCache()
     cached_data = cache.precalculate(matrix, test_rounds)
     
-    # 가용 코어 전체 사용 (시스템 여유분 1개 확보)
-    num_cores = max(1, mp.cpu_count() - 1)
+    try:
+        requested = int(os.environ.get('LOTTO_TRAIN_CORES', '1'))
+    except ValueError:
+        requested = 1
+    num_cores = max(1, min(requested, mp.cpu_count()))
     
     for gen in range(generations):
         print(f"\n{'='*60}")
@@ -207,39 +210,51 @@ def genetic_optimize(matrix, generations=10, population_size=10, test_rounds=100
             sys.stdout.write(f"\r  ✅ [시간: {elapsed:3.0f}s] |{'█'*30}| 100.0% ({population_size}/{population_size}) - 최고점수: {current_best_in_gen:.4f}\n")
             sys.stdout.flush()
 
-        # 프로세스 풀 생성 및 실행
-        pool = mp.Pool(processes=num_cores)
-        
-        # 모니터링 스레드 시작
-        monitor_thread = threading.Thread(target=_progress_monitor)
-        monitor_thread.start()
-        
-        try:
-            results = []
-            # imap_unordered 사용
-            for i, res in enumerate(pool.imap_unordered(worker_eval_cached, task_args)):
-                score, weights = res
+        results = []
+        if num_cores == 1:
+            start_seq = time.time()
+            for task_arg in task_args:
+                score, weights = worker_eval_cached(task_arg)
                 results.append((score, weights))
-                
                 with lock:
                     completed_count += 1
                     if score > current_best_in_gen:
                         current_best_in_gen = score
-            
-            monitor_thread.join() # 스레드 종료 대기
-            pool.close()
-            pool.join()
+                if completed_count % 5 == 0 or completed_count == population_size:
+                    elapsed = time.time() - start_seq
+                    sys.stdout.write(f"\r  순차평가 {completed_count}/{population_size} - 최고점수: {current_best_in_gen:.4f} ({elapsed:.0f}s)")
+                    sys.stdout.flush()
+            sys.stdout.write("\n")
             fitness = results
-        except KeyboardInterrupt:
-            print("\n⚠️ 사용자에 의해 학습이 중단되었습니다. 하위 프로세스를 정리합니다...")
-            pool.terminate()
-            pool.join()
-            raise # 상위로 전달하여 프로그램 종료
-        except Exception as e:
-            print(f"\n❌ 오류 발생: {e}")
-            pool.terminate()
-            pool.join()
-            raise
+        else:
+            pool = mp.Pool(processes=num_cores)
+            monitor_thread = threading.Thread(target=_progress_monitor)
+            monitor_thread.start()
+
+            try:
+                for i, res in enumerate(pool.imap_unordered(worker_eval_cached, task_args)):
+                    score, weights = res
+                    results.append((score, weights))
+
+                    with lock:
+                        completed_count += 1
+                        if score > current_best_in_gen:
+                            current_best_in_gen = score
+
+                monitor_thread.join()
+                pool.close()
+                pool.join()
+                fitness = results
+            except KeyboardInterrupt:
+                print("\n⚠️ 사용자에 의해 학습이 중단되었습니다. 하위 프로세스를 정리합니다...")
+                pool.terminate()
+                pool.join()
+                raise
+            except Exception as e:
+                print(f"\n❌ 오류 발생: {e}")
+                pool.terminate()
+                pool.join()
+                raise
             
         print() 
         

@@ -129,7 +129,7 @@ class MLEngine(BaseEngine):
             
             # GradientBoosting보다 훨씬 빠르고 병렬 처리가 잘 되는 RandomForest 사용
             # 메타 피처가 늘어났으므로 capacity 증대 (n_estimators=50, max_depth=8)
-            self.model = MultiOutputClassifier(RandomForestClassifier(n_estimators=50, max_depth=8, random_state=42, n_jobs=1), n_jobs=-1)
+            self.model = MultiOutputClassifier(RandomForestClassifier(n_estimators=50, max_depth=8, random_state=42, n_jobs=1), n_jobs=1)
             self.model.fit(X, y)
             
             # 모델 캐싱 및 메모리 관리
